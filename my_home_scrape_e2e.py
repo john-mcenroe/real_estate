@@ -1,4 +1,5 @@
 import csv
+import os
 import time
 import requests
 from selenium import webdriver
@@ -170,5 +171,5 @@ def process_csv(input_csv, output_csv, api_key):
                     writer.writerow(row)
 
 # Call the function with the input CSV, desired output CSV, and your API key
-api_key = "AIzaSyBiAEpA-8G_WDKPH4lnnon95tbyYIRgkbM"
+api_key = os.getenv('GOOGLE_MAPS_API_KEY')
 process_csv('property_data.csv', 'output_property_data.csv', api_key)

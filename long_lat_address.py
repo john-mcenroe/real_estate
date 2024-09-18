@@ -1,4 +1,5 @@
 import requests
+import os
 
 # Function to get latitude and longitude using Google Maps Geocoding API
 def get_latitude_longitude(address, api_key):
@@ -28,7 +29,8 @@ def get_latitude_longitude(address, api_key):
 # Example usage
 if __name__ == "__main__":
     # Your Google Maps Geocoding API key
-    api_key = "AIzaSyBiAEpA-8G_WDKPH4lnnon95tbyYIRgkbM"
+    api_key = os.getenv('GOOGLE_MAPS_API_KEY')
+    print(api_key)
     address = "Apartment 9, Chestnut House, Grace Park Court, Beaumont, Dublin 9, D09KT67"
     
     # Get the latitude and longitude
