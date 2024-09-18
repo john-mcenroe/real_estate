@@ -51,8 +51,14 @@ def parse_listing(url):
 
         # Extracting Floor Area (handling the separate <sup> element)
         floor_area_element = driver.find_element(By.XPATH, "//span[contains(@class, 'info-strip--divider') and contains(text(), 'm')]")
-        sup_element = floor_area_element.find_element(By.TAG_NAME, 'sup')
-        data['Floor Area Value'] = safe_get_text(floor_area_element).replace(safe_get_text(sup_element), '') + safe_get_text(sup_element)
+        
+        # Check if <sup> exists and handle it
+        sup_elements = floor_area_element.find_elements(By.TAG_NAME, 'sup')  # Find all <sup> elements within the floor area element
+        sup_text = safe_get_text(sup_elements[0]) if sup_elements else ''  # Use the first <sup> element if found
+
+        # Extract and format the floor area value
+        floor_area_value = safe_get_text(floor_area_element).replace(sup_text, '') + sup_text
+        data['Floor Area Value'] = floor_area_value
 
         # Extracting BER Rating, BER Number, and Energy Performance Indicator
         ber_info = safe_get_text(driver.find_element(By.CSS_SELECTOR, 'p.brochure__details--description-content'))
@@ -82,7 +88,7 @@ def parse_listing(url):
     return data
 
 # Example usage
-url = "https://www.myhome.ie/residential/brochure/13-mapas-avenue-dalkey-co-dublin/4795687"
+url = "https://www.myhome.ie/residential/brochure/54-larkfield-gardens-dublin-6w/4799162"
 listing_data = parse_listing(url)
 
 # Output the listing data
