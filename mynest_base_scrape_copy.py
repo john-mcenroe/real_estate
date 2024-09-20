@@ -4,16 +4,23 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from webdriver_manager.chrome import ChromeDriverManager
 import time
+import os
 
 # Initialize the Chrome WebDriver using webdriver-manager
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 
-# Navigate to the URL
+# Set parameters
 region = "Dublin"  # Parameterized region name
-url = f"https://mynest.ie/priceregister/{region}"
+start_page = 25  # Starting page number
+url = f"https://mynest.ie/priceregister/{region}/{start_page}"
 driver.get(url)
+
+# Create the output directory
+output_dir = f"scraped_{region}"
+os.makedirs(output_dir, exist_ok=True)
 
 # Explicitly wait for the table to load
 wait = WebDriverWait(driver, 10)
@@ -21,9 +28,16 @@ wait = WebDriverWait(driver, 10)
 # Set to store property data
 property_data = []
 
-# Add a counter for test mode
-record_limit = 2  # Set the limit to 2 records for testing
-record_count = 0  # Initialize the record count
+# Set to store unique addresses and URLs
+unique_addresses = set()
+
+# Set the record limit
+record_limit = 50000
+record_count = 0
+
+# Variable to keep track of the current page number
+current_page = start_page
+max_pages_to_test = 500
 
 # Function to scrape property details
 def scrape_property_data():
@@ -73,14 +87,38 @@ def scrape_property_data():
         print(f"Error occurred while scraping property data: {e}")
         return None
 
+# Function to save the current data to a CSV file
+def save_to_csv(filename):
+    filepath = os.path.join(output_dir, filename)
+    with open(filepath, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerow([
+            'Address', 'Asking Price', 'Beds', 'Baths', 'Property Type',
+            'Energy Rating', 'Eircode', 'Local Property Tax', 'Agency Name',
+            'Agency Contact', 'Price Changes', 'URL'
+        ])  # Write the header
+        for data in property_data:
+            address = data['Address']
+            url = next((url for addr, url in unique_addresses if addr == address), '')
+            writer.writerow([
+                address, data['Asking Price'], data['Beds'], data['Baths'],
+                data['Property Type'], data['Energy Rating'], data['Eircode'],
+                data['Local Property Tax'], data['Agency Name'], data['Agency Contact'],
+                "; ".join([f"{p['Change']}, {p['Price']}, {p['Date']}" for p in data['Price Changes']]),
+                url
+            ])
+    print(f"Data saved to {filepath}")
+
+# Function to handle pagination and scraping
 def extract_data():
-    global record_count  # Access the global counter for record tracking
+    global record_count, current_page
 
     # Keep track of processed addresses
     processed_addresses = set()
 
-    while True:
+    while current_page <= max_pages_to_test and record_count < record_limit:
         try:
+            print(f"Processing page {current_page}")
             # Wait for the rows to load
             wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'div.fancy-Rtable-cell--content.fancy-title-content')))
             
@@ -89,6 +127,9 @@ def extract_data():
             
             # Process each row one by one
             for row in rows:
+                if record_count >= record_limit:
+                    return
+
                 address = row.text.strip()  # Extract the text and clean up spaces
 
                 # Skip the row if it's already processed
@@ -101,8 +142,14 @@ def extract_data():
                     # Click the address to go to the detailed page
                     row.click()
 
-                    # Wait for 2 seconds to ensure the page is loaded
-                    time.sleep(2)
+                    # Wait for 1 second to ensure the page is loaded
+                    time.sleep(1)
+
+                    # Get the current URL
+                    url = driver.current_url
+
+                    # Store the URL and address
+                    unique_addresses.add((address, url))
 
                     # Scrape property data
                     data = scrape_property_data()
@@ -113,11 +160,8 @@ def extract_data():
                     # Add the address to the processed list
                     processed_addresses.add(address)
 
-                    # Increment the record count and stop after reaching the limit
+                    # Increment the record count
                     record_count += 1
-                    if record_count >= record_limit:
-                        print(f"Stopping after {record_limit} records.")
-                        return  # Exit the function after hitting the record limit
 
                     # Go back to the main listing page
                     driver.back()
@@ -126,13 +170,35 @@ def extract_data():
                     wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'div.fancy-Rtable-cell--content.fancy-title-content')))
                     
                     # Pause to ensure the page is fully loaded
-                    time.sleep(2)
+                    time.sleep(1)
 
                 except Exception as e:
                     print(f"Error processing {address}: {e}")
 
-            # Exit the loop once all rows have been processed
-            break
+            # Save the current data to a CSV file after processing each page
+            csv_filename = f"scraped_property_results_{region}_page_{current_page}.csv"
+            save_to_csv(csv_filename)
+
+            # Check if we need to go to the next page
+            try:
+                next_page_number = current_page + 1
+                next_page_link = driver.find_element(By.XPATH, f"//a[contains(@class, 'pagination-item') and text()='{next_page_number}']")
+                if next_page_link.is_displayed() and next_page_link.is_enabled():
+                    next_page_link.click()
+                    print(f"Clicked on page {next_page_number}")
+                    current_page = next_page_number
+                    time.sleep(2)  # Wait for the next page to load
+                else:
+                    print("No more pages to process or next button not clickable.")
+                    break
+
+            except NoSuchElementException:
+                print("Next page link not found.")
+                break
+
+            except Exception as e:
+                print(f"Error in pagination: {e}")
+                break
 
         except Exception as e:
             print(f"Error locating elements: {e}")
@@ -144,21 +210,8 @@ extract_data()
 # Close the driver after scraping is done
 driver.quit()
 
-# Save the output results to a CSV file
-csv_filename = f"scraped_property_results_{region}.csv"
-with open(csv_filename, mode='w', newline='', encoding='utf-8') as file:
-    writer = csv.writer(file)
-    writer.writerow([
-        'Address', 'Asking Price', 'Beds', 'Baths', 'Property Type',
-        'Energy Rating', 'Eircode', 'Local Property Tax', 'Agency Name',
-        'Agency Contact', 'Price Changes'
-    ])  # Write the header
-    for data in property_data:
-        writer.writerow([
-            data['Address'], data['Asking Price'], data['Beds'], data['Baths'],
-            data['Property Type'], data['Energy Rating'], data['Eircode'],
-            data['Local Property Tax'], data['Agency Name'], data['Agency Contact'],
-            "; ".join([f"{p['Change']}, {p['Price']}, {p['Date']}" for p in data['Price Changes']])
-        ])
+# Save the final output results to a CSV file
+final_csv_filename = f"scraped_property_results_{region}_final.csv"
+save_to_csv(final_csv_filename)
 
-print(f"\nProperty details saved to {csv_filename}")
+print(f"\nFinal property details saved to {os.path.join(output_dir, final_csv_filename)}")
