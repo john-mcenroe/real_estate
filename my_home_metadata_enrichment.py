@@ -1,29 +1,43 @@
 import csv
 import requests
 import os
+import re
+import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
-import time
 from selenium.common.exceptions import WebDriverException, TimeoutException, NoSuchElementException
 
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 def google_search(query, max_retries=3):
+    options = webdriver.ChromeOptions()
+    # Uncomment the next line to run Chrome in headless mode
+    # options.add_argument('--headless')
+    driver_service = Service(ChromeDriverManager().install())
+
     for attempt in range(max_retries):
         try:
-            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+            driver = webdriver.Chrome(service=driver_service, options=options)
             driver.get(f"https://www.google.com/search?q={query}")
-            time.sleep(5)  # Increased wait time
+
+            # Wait until search results are present
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'div.g'))
+            )
+
             search_results = driver.find_elements(By.CSS_SELECTOR, 'div.g a')
             urls = [result.get_attribute('href') for result in search_results]
             driver.quit()
             return urls
-        except WebDriverException as e:
-            print(f"WebDriver error on attempt {attempt + 1}: {e}")
+        except Exception as e:
+            logging.error(f"Error during Google search on attempt {attempt + 1}: {e}")
             if attempt == max_retries - 1:
-                print("Max retries reached. Returning empty list.")
+                logging.error("Max retries reached. Returning empty list.")
                 return []
             time.sleep(2 ** attempt)  # Exponential backoff
         finally:
@@ -43,29 +57,34 @@ def safe_get_text(driver, selector, by=By.CSS_SELECTOR, timeout=10):
         )
         return element.text.strip()
     except (TimeoutException, NoSuchElementException):
-        print(f"Element not found: {selector}")
+        logging.warning(f"Element not found: {selector}")
         return ""
 
 def parse_listing(url):
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+    options = webdriver.ChromeOptions()
+    # Uncomment the next line to run Chrome in headless mode
+    # options.add_argument('--headless')
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     driver.get(url)
-    
+
     data = {'MyHome_Link': url}
-    
+
     try:
         # Wait for the page to load
         WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, 'h1.h4.fw-bold'))
         )
-        
-        # Try to handle the privacy popup
+
+        # Handle the privacy popup
         try:
-            WebDriverWait(driver, 10).until(
+            accept_button = WebDriverWait(driver, 10).until(
                 EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'I ACCEPT')]"))
-            ).click()
-            time.sleep(2)
-        except:
-            print("Privacy popup not found or could not be handled.")
+            )
+            accept_button.click()
+        except TimeoutException:
+            logging.info("Privacy popup not found or already handled.")
+        except Exception as e:
+            logging.error(f"Error handling privacy popup: {e}")
 
         # Extract data
         data['MyHome_Address'] = safe_get_text(driver, 'h1.h4.fw-bold')
@@ -73,59 +92,80 @@ def parse_listing(url):
         data['MyHome_Beds'] = safe_get_text(driver, "//span[contains(@class, 'info-strip--divider') and contains(text(), 'beds')]", By.XPATH)
         data['MyHome_Baths'] = safe_get_text(driver, "//span[contains(@class, 'info-strip--divider') and contains(text(), 'baths')]", By.XPATH)
 
-        floor_area_element = driver.find_element(By.XPATH, "//span[contains(@class, 'info-strip--divider') and contains(text(), 'm')]")
-        sup_elements = floor_area_element.find_elements(By.TAG_NAME, 'sup')
-        sup_text = safe_get_text(driver, 'sup', By.TAG_NAME) if sup_elements else ''
-        floor_area_value = safe_get_text(driver, "//span[contains(@class, 'info-strip--divider') and contains(text(), 'm')]", By.XPATH).replace(sup_text, '') + sup_text
-        data['MyHome_Floor_Area_Value'] = floor_area_value
+        # Floor area parsing
+        try:
+            floor_area_element = driver.find_element(By.XPATH, "//span[contains(@class, 'info-strip--divider') and contains(text(), 'm')]")
+            floor_area_text = floor_area_element.text.strip()
+            match = re.search(r'([\d.,]+)\s*m', floor_area_text)
+            if match:
+                floor_area_value = match.group(1)
+                data['MyHome_Floor_Area_Value'] = floor_area_value
+                data['MyHome_Floor_Area_Unit'] = 'm²'
+            else:
+                data['MyHome_Floor_Area_Value'] = ''
+                data['MyHome_Floor_Area_Unit'] = ''
+        except NoSuchElementException:
+            data['MyHome_Floor_Area_Value'] = ''
+            data['MyHome_Floor_Area_Unit'] = ''
 
-        ber_info = safe_get_text(driver, 'p.brochure__details--description-content')
-        if ber_info:
-            ber_parts = ber_info.split('\n')
-            data['MyHome_BER_Rating'] = ber_parts[0].replace('BER:', '').strip() if len(ber_parts) > 0 else ''
-            data['MyHome_BER_Number'] = ber_parts[1].replace('BER No:', '').strip() if len(ber_parts) > 1 else ''
-            data['MyHome_Energy_Performance_Indicator'] = ber_parts[2].replace('Energy Performance Indicator:', '').strip() if len(ber_parts) > 2 else ''
+        # Extract BER information
+        try:
+            ber_elements = driver.find_elements(By.XPATH, "//p[contains(@class, 'brochure__details--description-content')]")
+            data['MyHome_BER_Rating'] = ''
+            data['MyHome_BER_Number'] = ''
+            data['MyHome_Energy_Performance_Indicator'] = ''
+            for ber_element in ber_elements:
+                ber_text = ber_element.text.strip()
+                if 'BER' in ber_text:
+                    ber_parts = ber_text.split('\n')
+                    for part in ber_parts:
+                        if 'BER:' in part:
+                            data['MyHome_BER_Rating'] = part.replace('BER:', '').strip()
+                        elif 'BER No:' in part:
+                            data['MyHome_BER_Number'] = part.replace('BER No:', '').strip()
+                        elif 'Energy Performance Indicator:' in part:
+                            data['MyHome_Energy_Performance_Indicator'] = part.replace('Energy Performance Indicator:', '').strip()
+                    break
+        except Exception as e:
+            logging.error(f"Error extracting BER info: {e}")
 
-        # Set default values for fields that might not always be present
-        data['MyHome_Monthly_Price'] = '0'
-        data['MyHome_Floor_Area_Unit'] = 'm²'
-        data['MyHome_Publish_Date'] = ''
-        data['MyHome_Sale_Type'] = ''
-        data['MyHome_Category'] = ''
-        data['MyHome_Featured_Level'] = ''
+        # Set default values for optional fields
+        data.setdefault('MyHome_Monthly_Price', '0')
+        data.setdefault('MyHome_Publish_Date', '')
+        data.setdefault('MyHome_Sale_Type', '')
+        data.setdefault('MyHome_Category', '')
+        data.setdefault('MyHome_Featured_Level', '')
 
     except Exception as e:
-        print(f"Error extracting data: {e}")
-    
-    driver.quit()
+        logging.error(f"Error extracting data: {e}")
+    finally:
+        driver.quit()
     return data
 
 def get_latitude_longitude(address, api_key):
     base_url = "https://maps.googleapis.com/maps/api/geocode/json"
-    
-    params = {
-        "address": address,
-        "key": api_key
-    }
-    
-    response = requests.get(base_url, params=params)
-    results = response.json()
-
-    if results["status"] == "OK":
-        location = results["results"][0]["geometry"]["location"]
-        return location["lat"], location["lng"]
-    else:
-        print(f"Error fetching data: {results['status']}")
+    params = {"address": address, "key": api_key}
+    try:
+        response = requests.get(base_url, params=params)
+        results = response.json()
+        if results["status"] == "OK":
+            location = results["results"][0]["geometry"]["location"]
+            return location["lat"], location["lng"]
+        else:
+            logging.error(f"Error fetching geocode data for '{address}': {results['status']}")
+            return None, None
+    except Exception as e:
+        logging.error(f"Exception during geocoding for '{address}': {e}")
         return None, None
 
 def process_csv(input_file, output_file, api_key, limit=3):
     with open(input_file, 'r') as infile, open(output_file, 'w', newline='') as outfile:
         reader = csv.DictReader(infile)
         myhome_fields = [
-            'MyHome_Address', 'MyHome_Asking_Price', 'MyHome_Beds', 'MyHome_Baths', 
-            'MyHome_Floor_Area_Value', 'MyHome_BER_Rating', 'MyHome_BER_Number', 
-            'MyHome_Energy_Performance_Indicator', 'MyHome_Latitude', 'MyHome_Longitude', 
-            'MyHome_Monthly_Price', 'MyHome_Floor_Area_Unit', 'MyHome_Publish_Date', 
+            'MyHome_Address', 'MyHome_Asking_Price', 'MyHome_Beds', 'MyHome_Baths',
+            'MyHome_Floor_Area_Value', 'MyHome_BER_Rating', 'MyHome_BER_Number',
+            'MyHome_Energy_Performance_Indicator', 'MyHome_Latitude', 'MyHome_Longitude',
+            'MyHome_Monthly_Price', 'MyHome_Floor_Area_Unit', 'MyHome_Publish_Date',
             'MyHome_Sale_Type', 'MyHome_Category', 'MyHome_Featured_Level', 'MyHome_Link'
         ]
         fieldnames = reader.fieldnames + myhome_fields
@@ -135,45 +175,47 @@ def process_csv(input_file, output_file, api_key, limit=3):
         for i, row in enumerate(reader):
             if i >= limit:
                 break
-            
+
             address = row['Address']
-            print(f"Processing record {i+1}: {address}")
-            
+            logging.info(f"Processing record {i+1}: {address}")
+
             try:
                 urls = google_search(address)
                 myhome_links = find_myhome_links(urls)
 
                 if myhome_links:
-                    print(f"Found MyHome.ie link: {myhome_links[0]}")
+                    logging.info(f"Found MyHome.ie link: {myhome_links[0]}")
                     listing_data = parse_listing(myhome_links[0])
                     row.update(listing_data)
-                    
+
                     # Get latitude and longitude
                     lat, lng = get_latitude_longitude(address, api_key)
                     row['MyHome_Latitude'] = lat
                     row['MyHome_Longitude'] = lng
                 else:
-                    print("No MyHome.ie link found")
+                    logging.warning("No MyHome.ie link found")
                     # Add empty values for MyHome fields
                     for field in myhome_fields:
-                        row[field] = ''
+                        if field not in row:
+                            row[field] = ''
             except Exception as e:
-                print(f"Error processing record: {e}")
+                logging.error(f"Error processing record: {e}")
                 # Add empty values for MyHome fields
                 for field in myhome_fields:
-                    row[field] = ''
-            
+                    if field not in row:
+                        row[field] = ''
+
             writer.writerow(row)
-            print(f"Processed: {address}")
-            print("---")
+            logging.info(f"Processed: {address}")
+            logging.info("---")
 
 if __name__ == "__main__":
     input_file = "scraped_dublin/scraped_property_results_Dublin_page_1.csv"
     output_file = "scraped_dublin_metadata/scraped_property_results_metadata_Dublin_page_1_test.csv"
     api_key = os.getenv('GOOGLE_MAPS_API_KEY')
-    
+
     if not api_key:
-        print("Error: Google Maps API key not found. Please set the GOOGLE_MAPS_API_KEY environment variable.")
+        logging.error("Google Maps API key not found. Please set the GOOGLE_MAPS_API_KEY environment variable.")
     else:
-        process_csv(input_file, output_file, api_key, limit=3)
-        print("Processing complete. Results saved to", output_file)
+        process_csv(input_file, output_file, api_key, limit=10)
+        logging.info(f"Processing complete. Results saved to {output_file}")
