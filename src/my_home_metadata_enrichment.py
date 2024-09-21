@@ -217,5 +217,5 @@ if __name__ == "__main__":
     if not api_key:
         logging.error("Google Maps API key not found. Please set the GOOGLE_MAPS_API_KEY environment variable.")
     else:
-        process_csv(input_file, output_file, api_key, limit=10)
+        process_csv(input_file, output_file, api_key, limit=20)
         logging.info(f"Processing complete. Results saved to {output_file}")
