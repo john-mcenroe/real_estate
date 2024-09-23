@@ -1,3 +1,6 @@
+## Active in use
+## Goes through mynest starting at some page and gets as much data as it can. 
+
 import csv
 from selenium import webdriver
 from selenium.webdriver.common.by import By
