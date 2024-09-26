@@ -1,5 +1,5 @@
 ## Active in use
-## Goes through CSV file and iteratively gets myhome values for every address in the file. 
+## Goes through defined CSV file and iteratively gets myhome values for every address in the file. 
 
 import csv
 import requests

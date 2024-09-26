@@ -2,6 +2,8 @@ import os
 import re
 import requests
 import logging
+import csv
+import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -105,12 +107,9 @@ def scrape_images(url, save_folder):
     return image_urls
 
 # Function to scrape the property details and download the images
-def scrape_property(url):
-    parsed_url = urlparse(url)
-    address = parsed_url.path.split('/')[-2]
-    
-    # Create base folder "data/my_home_images"
-    base_folder = os.path.join("data", "my_home_images")
+def scrape_property(address, url):
+    # Create base folder "data/processed/my_home_images"
+    base_folder = os.path.join("data", "processed", "my_home_images")
     os.makedirs(base_folder, exist_ok=True)
 
     # Create a subfolder based on the address
@@ -120,7 +119,7 @@ def scrape_property(url):
 
     # Scrape images
     image_urls = scrape_images(url, property_folder)
-    logger.info(f"Found {len(image_urls)} image URLs")
+    logger.info(f"Found {len(image_urls)} image URLs for {address}")
 
     # Download images concurrently
     with ThreadPoolExecutor(max_workers=5) as executor:
@@ -129,9 +128,43 @@ def scrape_property(url):
             future.result()
 
     logger.info(f"Finished processing {url}")
-    return image_urls
+    return len(image_urls) > 0
+
+# Function to process CSV and save snapshots
+def process_csv(csv_path, limit=3):
+    df = pd.read_csv(csv_path)
+    df = df.head(limit)
+    
+    results = []
+    snapshot_dir = os.path.join("data", "processed", "my_home_images_snapshots")
+    os.makedirs(snapshot_dir, exist_ok=True)
+
+    for index, row in df.iterrows():
+        address = row['Address']
+        url = row['MyHome_Link']
+        
+        if pd.isna(url):
+            logger.warning(f"No MyHome link found for {address}. Skipping.")
+            results.append({'Address': address, 'Images_Found': False})
+            continue
+
+        images_found = scrape_property(address, url)
+        results.append({'Address': address, 'Images_Found': images_found})
+
+        # Save snapshot every 25 properties
+        if (index + 1) % 25 == 0 or index == len(df) - 1:
+            snapshot_df = pd.DataFrame(results)
+            snapshot_path = os.path.join(snapshot_dir, f'snapshot_{index+1}.csv')
+            snapshot_df.to_csv(snapshot_path, index=False)
+            logger.info(f"Saved snapshot to {snapshot_path}")
+
+    # Save final results
+    final_df = pd.DataFrame(results)
+    final_path = os.path.join("data", "processed", "my_home_images_final_results.csv")
+    final_df.to_csv(final_path, index=False)
+    logger.info(f"Saved final results to {final_path}")
 
 # Example usage
 if __name__ == "__main__":
-    url = "https://www.myhome.ie/residential/brochure/12-greenville-court-stradbrook-road-blackrock-co-dublin/4749817"
-    scrape_property(url)
+    csv_path =  "data/processed/scraped_dublin_metadata/scraped_property_results_metadata_Dublin_page_1.csv"
+    process_csv(csv_path)
