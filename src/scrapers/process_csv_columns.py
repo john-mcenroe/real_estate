@@ -13,6 +13,7 @@ def clean_currency(value):
         try:
             return float(value)
         except ValueError:
+            logging.warning(f"Unable to convert value to float: {value}")
             return None
     return value
 
@@ -22,19 +23,19 @@ def extract_sale_info(price_changes):
     if isinstance(price_changes, str):
         logging.debug(f"Extracting sale info from: {price_changes}")
         
-        # Adjust regex to capture the sale info, trying different formats
+        # Adjust regex to capture the sale info, allowing an optional semicolon at the end
         sale_patterns = [
-            r"Sold, €([0-9,]+), [A-Za-z]{3} \d{2} \d{4}",  # Standard with full date and day
-            r"Sold, €([0-9,]+), [A-Za-z]{3} [A-Za-z]{3} \d{2} \d{4}",  # With day of the week
+            r"Sold, €([0-9,]+), ([A-Za-z]{3} [A-Za-z]{3} \d{2} \d{4})",  # With day of the week
+            r"Sold, €([0-9,]+), ([A-Za-z]{3} \d{2} \d{4})",  # Without day of the week
         ]
         
         for pattern in sale_patterns:
             sale_match = re.search(pattern, price_changes)
             if sale_match:
                 sale_price = clean_currency(sale_match.group(1))  # Clean currency
-                sale_date = sale_match.group(0).split(", ")[2]  # Extract date
-                logging.info(f"Matched sale info: Price={sale_price}, Date={sale_date}")
-                return sale_price, sale_date
+                sale_date_str = sale_match.group(2).strip()  # Extract date string
+                logging.info(f"Matched sale info: Price={sale_price}, Date={sale_date_str}")
+                return sale_price, sale_date_str
         
         logging.warning(f"No match for sale info: {price_changes}")
     return None, None
@@ -45,20 +46,19 @@ def extract_first_list_info(price_changes):
     if isinstance(price_changes, str):
         logging.debug(f"Extracting first list info from: {price_changes}")
         
-        # Adjust regex to capture the first list price and date, allowing different formats
+        # Adjust regex to capture the first list price and date, allowing an optional semicolon at the end
         list_patterns = [
-            r"Created, €([0-9,]+), [A-Za-z]{3} \d{2} \d{4}",  # Standard with full date
-            r"Created, €([0-9,]+), [A-Za-z]{3} [A-Za-z]{3} \d{2} \d{4}",  # With day of the week
-            r"Created, €([0-9,]+), [A-Za-z]{3} [A-Za-z]{3} \d{2} \d{4};",  # Ending with semicolon
+            r"Created, €([0-9,]+), ([A-Za-z]{3} [A-Za-z]{3} \d{2} \d{4})",  # With day of the week
+            r"Created, €([0-9,]+), ([A-Za-z]{3} \d{2} \d{4})",  # Without day of the week
         ]
         
         for pattern in list_patterns:
             list_match = re.search(pattern, price_changes)
             if list_match:
                 list_price = clean_currency(list_match.group(1))  # Clean currency
-                list_date = list_match.group(0).split(", ")[2]  # Extract the date
-                logging.info(f"Matched first list info: Price={list_price}, Date={list_date}")
-                return list_price, list_date
+                list_date_str = list_match.group(2).strip()  # Extract date string
+                logging.info(f"Matched first list info: Price={list_price}, Date={list_date_str}")
+                return list_price, list_date_str
         
         logging.warning(f"No match for first list info: {price_changes}")
     return None, None
@@ -83,10 +83,12 @@ except Exception as e:
 # Apply the functions to extract sale and list price/date
 try:
     logging.info("Applying sale price and date extraction.")
-    df['Sale Price'], df['Sale Date'] = zip(*df['Price Changes'].apply(extract_sale_info))
-
+    sale_info = df['Price Changes'].apply(extract_sale_info)
+    df['Sale Price'], df['Sale Date'] = zip(*sale_info)
+    
     logging.info("Applying first list price and date extraction.")
-    df['First List Price'], df['First List Date'] = zip(*df['Price Changes'].apply(extract_first_list_info))
+    list_info = df['Price Changes'].apply(extract_first_list_info)
+    df['First List Price'], df['First List Date'] = zip(*list_info)
 except Exception as e:
     logging.error(f"Error occurred during data extraction: {e}")
     raise
@@ -107,8 +109,27 @@ except Exception as e:
 # Convert 'Sale Date' and 'First List Date' to datetime objects
 try:
     logging.info("Converting 'Sale Date' and 'First List Date' to datetime.")
-    df['Sale Date'] = pd.to_datetime(df['Sale Date'], format='%b %d %Y', errors='coerce')
-    df['First List Date'] = pd.to_datetime(df['First List Date'], format='%b %d %Y', errors='coerce')
+    
+    # Function to parse date strings with or without day of the week
+    def parse_date(date_str):
+        if pd.isna(date_str):
+            return pd.NaT
+        try:
+            # Try parsing with day of the week
+            return pd.to_datetime(date_str, format='%a %b %d %Y', errors='coerce')
+        except:
+            pass
+        try:
+            # Try parsing without day of the week
+            return pd.to_datetime(date_str, format='%b %d %Y', errors='coerce')
+        except:
+            pass
+        # Fallback to infer format
+        return pd.to_datetime(date_str, infer_datetime_format=True, errors='coerce')
+    
+    df['Sale Date'] = df['Sale Date'].apply(parse_date)
+    df['First List Date'] = df['First List Date'].apply(parse_date)
+    
     logging.info("Date conversion successful.")
 except Exception as e:
     logging.error(f"Error during date conversion: {e}")
@@ -125,6 +146,15 @@ except KeyError as e:
     raise
 except Exception as e:
     logging.error(f"Error occurred while extracting latitude and longitude: {e}")
+    raise
+
+# Optional: Validate and log the extracted dates
+try:
+    logging.debug("Validating extracted dates.")
+    for index, row in df.iterrows():
+        logging.debug(f"Row {index}: Sale Date - {row['Sale Date']}, First List Date - {row['First List Date']}")
+except Exception as e:
+    logging.error(f"Error during date validation: {e}")
     raise
 
 # Save the updated DataFrame to a new CSV file

@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 # Step 1: Read the CSV file and limit to first 50 rows
 csv_file_path = '/Users/johnmcenroe/Documents/programming_misc/real_estate/data/processed/post_juypter_processing/scraped_property_results_metadata_Dublin_page_1_2024_10_28.csv'
-df = pd.read_csv(csv_file_path).head(50)  ####### Limit to the first 50 rows for testing
+df = pd.read_csv(csv_file_path).head(2)  ####### Limit to the first 2000 rows for testing
 
 # Step 2: Get Supabase credentials from environment variables
 SUPABASE_URL = os.getenv('SUPABASE_URL')
