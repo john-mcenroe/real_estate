@@ -114,6 +114,19 @@ except Exception as e:
     logging.error(f"Error during date conversion: {e}")
     raise
 
+# Now, handle the latitude and longitude fields
+try:
+    logging.info("Extracting 'Latitude' and 'Longitude' columns.")
+    df['Latitude'] = df['MyHome_Latitude']  # Assuming 'MyHome_Latitude' is the column in the CSV
+    df['Longitude'] = df['MyHome_Longitude']  # Assuming 'MyHome_Longitude' is the column in the CSV
+    logging.info("'Latitude' and 'Longitude' extraction successful.")
+except KeyError as e:
+    logging.error(f"Missing column for latitude or longitude: {e}")
+    raise
+except Exception as e:
+    logging.error(f"Error occurred while extracting latitude and longitude: {e}")
+    raise
+
 # Save the updated DataFrame to a new CSV file
 output_file_path = '/Users/johnmcenroe/Documents/programming_misc/real_estate/data/processed/post_juypter_processing/scraped_property_results_metadata_Dublin_page_1_2024_10_28.csv'
 

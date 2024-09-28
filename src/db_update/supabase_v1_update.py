@@ -48,7 +48,9 @@ for _, row in df.iterrows():
         'sale_price': row['Sale Price'],
         'sale_date': row['Sale Date'],
         'first_list_price': row['First List Price'],
-        'first_list_date': row['First List Date']
+        'first_list_date': row['First List Date'],
+        'latitude': row['Latitude'],  # Add latitude
+        'longitude': row['Longitude']  # Add longitude
     }
 
     # Clean the data to handle NaN values
