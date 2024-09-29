@@ -15,6 +15,8 @@ def clean_currency(value):
         except ValueError:
             logging.warning(f"Unable to convert value to float: {value}")
             return None
+    elif pd.isna(value):
+        return None
     return value
 
 # Updated function to extract sale price and date from 'Price Changes'
@@ -63,6 +65,52 @@ def extract_first_list_info(price_changes):
         logging.warning(f"No match for first list info: {price_changes}")
     return None, None
 
+# Function to compute price per square metre
+def compute_price_per_square_metre(row):
+    """
+    Computes the price per square metre.
+    Uses 'Cleaned Sale Price' if available; otherwise, returns None.
+    Handles NaN and zero area.
+    """
+    price = row['Cleaned Sale Price']
+    area = row.get('MyHome_Floor_Area_Value')  # Corrected column name
+    
+    # Handle unit conversion if necessary
+    unit = row.get('MyHome_Floor_Area_Unit')
+    if pd.notna(area) and pd.notna(unit):
+        unit = unit.lower()
+        if unit in ['sqm', 'square metres', 'm²', 'm2']:
+            pass  # Already in square metres
+        elif unit in ['sqft', 'square feet', 'ft²', 'ft2']:
+            area = area * 0.092903  # Convert square feet to square metres
+            logging.debug(f"Row {row.name}: Converted area from sqft to sqm.")
+        else:
+            logging.warning(f"Row {row.name}: Unknown area unit '{unit}'.")
+            return None
+    elif pd.isna(area):
+        logging.debug(f"Row {row.name}: Floor area is NaN.")
+        return None
+    elif pd.isna(unit):
+        logging.warning(f"Row {row.name}: Floor area unit is missing.")
+        return None
+
+    if pd.isna(price):
+        logging.debug(f"Row {row.name}: Cleaned Sale Price is NaN.")
+        return None
+    if pd.isna(area):
+        logging.debug(f"Row {row.name}: Floor area is NaN after unit conversion.")
+        return None
+    if area == 0:
+        logging.debug(f"Row {row.name}: Floor area is zero.")
+        return None
+    try:
+        price_per_sqm = price / area
+        logging.debug(f"Row {row.name}: Price per sqm calculated as {price_per_sqm}.")
+        return price_per_sqm
+    except Exception as e:
+        logging.warning(f"Row {row.name}: Error calculating price per sqm: {e}")
+        return None
+
 # Safe file reading with error handling
 input_file_path = '/Users/johnmcenroe/Documents/programming_misc/real_estate/data/processed/scraped_dublin_metadata/scraped_property_results_metadata_Dublin_page_1.csv'
 
@@ -104,6 +152,18 @@ except KeyError as e:
     raise
 except Exception as e:
     logging.error(f"Error occurred during currency cleaning: {e}")
+    raise
+
+# Clean 'Sale Price' by applying clean_currency
+try:
+    logging.info("Cleaning 'Sale Price' column.")
+    df['Cleaned Sale Price'] = df['Sale Price'].apply(clean_currency)
+    logging.info("Sale Price cleaning completed.")
+except KeyError as e:
+    logging.error(f"Missing 'Sale Price' column: {e}")
+    raise
+except Exception as e:
+    logging.error(f"Error occurred during Sale Price cleaning: {e}")
     raise
 
 # Convert 'Sale Date' and 'First List Date' to datetime objects
@@ -155,6 +215,26 @@ try:
         logging.debug(f"Row {index}: Sale Date - {row['Sale Date']}, First List Date - {row['First List Date']}")
 except Exception as e:
     logging.error(f"Error during date validation: {e}")
+    raise
+
+# Compute Price per Square Metre
+try:
+    logging.info("Computing Price per Square Metre.")
+    
+    # Ensure 'MyHome_Floor_Area_Value' is numeric
+    df['MyHome_Floor_Area_Value'] = pd.to_numeric(df['MyHome_Floor_Area_Value'], errors='coerce')
+    
+    df['Price per Square Metre'] = df.apply(compute_price_per_square_metre, axis=1)
+    
+    # Optionally, round the price per sqm to two decimal places
+    df['Price per Square Metre'] = df['Price per Square Metre'].round(2)
+    
+    logging.info("Price per Square Metre calculation completed.")
+except KeyError as e:
+    logging.error(f"Missing column for price per square metre calculation: {e}")
+    raise
+except Exception as e:
+    logging.error(f"Error occurred during price per square metre calculation: {e}")
     raise
 
 # Save the updated DataFrame to a new CSV file
