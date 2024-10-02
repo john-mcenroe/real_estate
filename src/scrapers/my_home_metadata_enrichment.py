@@ -231,11 +231,11 @@ def process_csv(input_file, output_file, api_key, limit=500):
 
 if __name__ == "__main__":
     input_file = "data/processed/scraped_dublin/scraped_property_results_Dublin_page_24.csv"
-    output_file = "data/processed/scraped_dublin_metadata/scraped_property_results_metadata_Dublin_page_1.csv"
+    output_file = "data/processed/scraped_dublin_metadata/scraped_property_results_metadata_Dublin_page_1_test.csv"
     api_key = os.getenv('GOOGLE_MAPS_API_KEY')
 
     if not api_key:
         logging.error("Google Maps API key not found. Please set the GOOGLE_MAPS_API_KEY environment variable.")
     else:
-        process_csv(input_file, output_file, api_key, limit=2500)
+        process_csv(input_file, output_file, api_key, limit=2)
         logging.info(f"Processing complete. Results saved to {output_file}")
