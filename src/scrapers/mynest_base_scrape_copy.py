@@ -1,4 +1,4 @@
-## Active in use
+#### ACTIVE IN USE #####
 ## Goes through mynest starting at some page and gets as much data as it can. 
 
 import csv
@@ -35,7 +35,7 @@ property_data = []
 unique_addresses = set()
 
 # Set the record limit
-record_limit = 50000
+record_limit = 5
 record_count = 0
 
 # Variable to keep track of the current page number

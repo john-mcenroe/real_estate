@@ -1,3 +1,5 @@
+
+
 import os
 import re
 import csv
@@ -526,7 +528,7 @@ def process_csv(input_file, output_file, api_key, limit=500, headless=True):
 
 if __name__ == "__main__":
     # Configuration via environment variables or defaults
-    input_file = os.getenv("INPUT_CSV_PATH", "data/processed/scraped_dublin/scraped_property_results_Dublin_page_24.csv")
+    input_file = os.getenv("INPUT_CSV_PATH", "/Users/johnmcenroe/Documents/programming_misc/real_estate/data/processed/scraped_dublin_metadata/scraped_property_results_metadata_Dublin_page_1.csv")
     output_file = os.getenv("OUTPUT_CSV_PATH", "data/processed/scraped_dublin_metadata/scraped_property_results_metadata_Dublin_page_1_test.csv")
     api_key = os.getenv("GOOGLE_MAPS_API_KEY")
     limit = int(os.getenv("PROCESS_LIMIT", "2"))  # Set to 500 or desired number in production
