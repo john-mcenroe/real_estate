@@ -140,3 +140,145 @@
 2024-10-02 16:41:38,348 - INFO - Saved final snapshot to data/processed/my_home_images_snapshots/snapshot_1.csv
 2024-10-02 16:41:38,348 - INFO - Saved final results to data/processed/my_home_images_final_results.csv
 2024-10-02 16:41:38,349 - INFO - Processing complete. Results saved to data/processed/scraped_dublin_metadata/scraped_property_results_metadata_Dublin_page_1_test.csv
+2024-10-02 16:45:34,435 - INFO - Starting CSV processing...
+2024-10-02 16:45:34,441 - INFO - Loaded 2 records from input CSV (limit set to 2).
+2024-10-02 16:45:34,441 - INFO - Initialized output CSV with headers.
+2024-10-02 16:45:35,259 - DEBUG - WebDriver initialized successfully.
+2024-10-02 16:45:35,262 - INFO - Processing record 1: Taramar, Middle Third, Dublin 5, D05X8N9
+2024-10-02 16:45:36,130 - INFO - Found 6 URLs from Google search for query 'Taramar, Middle Third, Dublin 5, D05X8N9'.
+2024-10-02 16:45:36,131 - INFO - Filtered 2 MyHome.ie links.
+2024-10-02 16:45:36,131 - INFO - Found MyHome.ie link: https://www.myhome.ie/residential/brochure/taramar-middle-third-killester-dublin-5/4786863
+2024-10-02 16:45:37,392 - INFO - Opened URL: https://www.myhome.ie/residential/brochure/taramar-middle-third-killester-dublin-5/4786863
+2024-10-02 16:45:37,436 - INFO - Privacy popup accepted.
+2024-10-02 16:45:39,456 - DEBUG - Extracted text for selector 'h1.h4.fw-bold': 'Taramar, Middle Third, Killester, Dublin 5'
+2024-10-02 16:45:39,464 - DEBUG - Extracted text for selector 'b.brochure__price': 'Sold'
+2024-10-02 16:45:39,472 - DEBUG - Extracted text for selector '//span[contains(@class, 'info-strip--divider') and contains(text(), 'beds')]': '4 beds'
+2024-10-02 16:45:49,739 - WARNING - Element not found: //span[contains(@class, 'info-strip--divider') and contains(text(), 'baths')]
+2024-10-02 16:45:49,753 - DEBUG - Extracted floor area: 142 m²
+2024-10-02 16:45:49,763 - INFO - Extracted data for https://www.myhome.ie/residential/brochure/taramar-middle-third-killester-dublin-5/4786863: {'MyHome_Link': 'https://www.myhome.ie/residential/brochure/taramar-middle-third-killester-dublin-5/4786863', 'MyHome_Address': 'Taramar, Middle Third, Killester, Dublin 5', 'MyHome_Asking_Price': 'Sold', 'MyHome_Beds': '4 beds', 'MyHome_Baths': '', 'MyHome_Floor_Area_Value': '142', 'MyHome_BER_Rating': ''}
+2024-10-02 16:45:50,089 - DEBUG - Geocoded 'Taramar, Middle Third, Dublin 5, D05X8N9' to (lat: 53.3738569, lng: -6.203371)
+2024-10-02 16:45:50,949 - DEBUG - WebDriver initialized successfully.
+2024-10-02 16:45:54,060 - INFO - Opened URL for images: https://www.myhome.ie/residential/brochure/taramar-middle-third-killester-dublin-5/4786863
+2024-10-02 16:45:54,610 - INFO - Privacy popup accepted for images.
+2024-10-02 16:45:56,650 - INFO - Clicked main image to open carousel for images.
+2024-10-02 16:45:58,679 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/e984b588-9557-408e-ba98-a18338fbf007_x.jpg
+2024-10-02 16:45:59,232 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/096089e9-affb-4286-99dd-ff46f072ac2c_x.jpg
+2024-10-02 16:45:59,783 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/f548ae88-db94-4c00-bcc7-4e28bea3f540_x.jpg
+2024-10-02 16:46:00,333 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/8eb749aa-842f-468f-9a2d-c6385de57909_x.jpg
+2024-10-02 16:46:00,874 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/e605bfc9-098f-47cb-bedb-c0d793d9262c_x.jpg
+2024-10-02 16:46:01,419 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/0f532c03-80fa-4794-94b2-6a9d2d6934e7_x.jpg
+2024-10-02 16:46:01,955 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/3d4dc52c-4a66-43a2-80d8-41cc6f1efc57_x.jpg
+2024-10-02 16:46:02,490 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/8e2e6d3f-5ed8-4577-ab12-4b9248c15bd9_x.jpg
+2024-10-02 16:46:03,039 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/1fa805a7-78d2-4b4c-8ff5-3f0daf66de09_x.jpg
+2024-10-02 16:46:03,588 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/75217a99-0e2b-49de-bce9-a78d08502541_x.jpg
+2024-10-02 16:46:04,142 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/1d4a92b3-f718-41c0-bda2-afc3ac49ecfc_x.jpg
+2024-10-02 16:46:04,687 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/88a7c9a3-9358-4a26-9224-23467e71a05b_x.jpg
+2024-10-02 16:46:05,235 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/3a0cd3de-c29a-4055-833a-55a5b4b79c19_x.jpg
+2024-10-02 16:46:05,775 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/89b664a8-356a-4146-b7a1-4dfe188f706f_x.jpg
+2024-10-02 16:46:06,312 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/b5a3edcd-4881-4daa-991c-7cdfdce28942_x.jpg
+2024-10-02 16:46:06,856 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/fe812711-f027-4f24-a86f-b147d795fa92_x.jpg
+2024-10-02 16:46:07,399 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/c6e6c1d6-3f73-429d-b60e-1f1750784acf_x.jpg
+2024-10-02 16:46:07,937 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/090a9460-542f-4b45-937d-8deae2045a80_x.jpg
+2024-10-02 16:46:08,481 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/deeeaa78-c289-41f9-bb18-0c6fdfd6a6f2_x.jpg
+2024-10-02 16:46:09,032 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/fd3a8f3b-df7a-4137-8951-51080a52a897_x.jpg
+2024-10-02 16:46:09,573 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/6f1a5c37-abb4-4caf-adfb-b2a086121f52_x.jpg
+2024-10-02 16:46:10,110 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/7fd8dfde-dfe9-4536-b3c4-b84b74584561_x.jpg
+2024-10-02 16:46:10,659 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/2dfcf7bc-a60f-407d-8275-2c0c603fb228_x.jpg
+2024-10-02 16:46:11,209 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/3/6/8/4786863/8d0a7844-8fc6-4283-8677-00c30f0da333_x.jpg
+2024-10-02 16:46:11,761 - INFO - Duplicate image URL encountered: https://photos-a.propertyimages.ie/media/3/6/8/4786863/e984b588-9557-408e-ba98-a18338fbf007_x.jpg. Stopping.
+2024-10-02 16:46:11,861 - INFO - Image WebDriver closed after scraping images.
+2024-10-02 16:46:11,862 - INFO - Found 24 image URLs for Taramar, Middle Third, Dublin 5, D05X8N9
+2024-10-02 16:46:12,080 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_002.jpg
+2024-10-02 16:46:12,121 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_003.jpg
+2024-10-02 16:46:12,132 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_001.jpg
+2024-10-02 16:46:12,135 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_005.jpg
+2024-10-02 16:46:12,213 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_004.jpg
+2024-10-02 16:46:12,257 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_006.jpg
+2024-10-02 16:46:12,274 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_007.jpg
+2024-10-02 16:46:12,287 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_008.jpg
+2024-10-02 16:46:12,304 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_009.jpg
+2024-10-02 16:46:12,337 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_010.jpg
+2024-10-02 16:46:12,373 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_012.jpg
+2024-10-02 16:46:12,428 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_011.jpg
+2024-10-02 16:46:12,434 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_013.jpg
+2024-10-02 16:46:12,453 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_014.jpg
+2024-10-02 16:46:12,455 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_015.jpg
+2024-10-02 16:46:12,514 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_016.jpg
+2024-10-02 16:46:12,549 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_017.jpg
+2024-10-02 16:46:12,571 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_020.jpg
+2024-10-02 16:46:12,585 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_019.jpg
+2024-10-02 16:46:12,611 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_018.jpg
+2024-10-02 16:46:12,648 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_021.jpg
+2024-10-02 16:46:12,677 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_022.jpg
+2024-10-02 16:46:12,715 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_023.jpg
+2024-10-02 16:46:12,765 - DEBUG - Downloaded data/processed/my_home_images/taramar--middle-third--dublin-5--d05x8n9/image_024.jpg
+2024-10-02 16:46:12,768 - INFO - Downloaded 24 out of 24 images for Taramar, Middle Third, Dublin 5, D05X8N9
+2024-10-02 16:46:12,769 - INFO - Written data for: Taramar, Middle Third, Dublin 5, D05X8N9
+2024-10-02 16:46:12,770 - INFO - Processing record 2: 87 Haddington Road, Dublin 4, D04WP23
+2024-10-02 16:46:14,121 - INFO - Found 20 URLs from Google search for query '87 Haddington Road, Dublin 4, D04WP23'.
+2024-10-02 16:46:14,121 - INFO - Filtered 2 MyHome.ie links.
+2024-10-02 16:46:14,121 - INFO - Found MyHome.ie link: https://www.myhome.ie/residential/brochure/87-haddington-road-ballsbridge-dublin-4/4731627
+2024-10-02 16:46:14,612 - INFO - Opened URL: https://www.myhome.ie/residential/brochure/87-haddington-road-ballsbridge-dublin-4/4731627
+2024-10-02 16:46:24,921 - INFO - Privacy popup not found or already handled.
+2024-10-02 16:46:24,949 - DEBUG - Extracted text for selector 'h1.h4.fw-bold': '87 Haddington Road, Ballsbridge, Dublin 4'
+2024-10-02 16:46:24,961 - DEBUG - Extracted text for selector 'b.brochure__price': 'Sold'
+2024-10-02 16:46:24,967 - DEBUG - Extracted text for selector '//span[contains(@class, 'info-strip--divider') and contains(text(), 'beds')]': '5 beds'
+2024-10-02 16:46:24,975 - DEBUG - Extracted text for selector '//span[contains(@class, 'info-strip--divider') and contains(text(), 'baths')]': '3 baths'
+2024-10-02 16:46:24,983 - DEBUG - Extracted floor area: 175 m²
+2024-10-02 16:46:24,990 - INFO - Extracted data for https://www.myhome.ie/residential/brochure/87-haddington-road-ballsbridge-dublin-4/4731627: {'MyHome_Link': 'https://www.myhome.ie/residential/brochure/87-haddington-road-ballsbridge-dublin-4/4731627', 'MyHome_Address': '87 Haddington Road, Ballsbridge, Dublin 4', 'MyHome_Asking_Price': 'Sold', 'MyHome_Beds': '5 beds', 'MyHome_Baths': '3 baths', 'MyHome_Floor_Area_Value': '175', 'MyHome_BER_Rating': ''}
+2024-10-02 16:46:25,145 - DEBUG - Geocoded '87 Haddington Road, Dublin 4, D04WP23' to (lat: 53.3353854, lng: -6.2398422)
+2024-10-02 16:46:25,869 - DEBUG - WebDriver initialized successfully.
+2024-10-02 16:46:26,927 - INFO - Opened URL for images: https://www.myhome.ie/residential/brochure/87-haddington-road-ballsbridge-dublin-4/4731627
+2024-10-02 16:46:27,473 - INFO - Privacy popup accepted for images.
+2024-10-02 16:46:29,539 - INFO - Clicked main image to open carousel for images.
+2024-10-02 16:46:31,568 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/7/2/6/4731627/a5d8ab1c-3926-4572-8db5-6ddb87d5788e_x.jpg
+2024-10-02 16:46:32,124 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/7/2/6/4731627/4a1df136-88fc-4cb4-b56c-0c04cbf0f58c_x.jpg
+2024-10-02 16:46:32,673 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/7/2/6/4731627/3f5873e1-2053-4c5e-9939-85e5e554711b_x.jpg
+2024-10-02 16:46:33,223 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/7/2/6/4731627/c3895eb6-a1b6-4db6-811a-d02915751bde_x.jpg
+2024-10-02 16:46:33,772 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/7/2/6/4731627/3a214190-769f-40ae-a01e-6ed4cb055b72_x.jpg
+2024-10-02 16:46:34,329 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/7/2/6/4731627/b667e4c1-9d19-4484-858d-1bc5c6cf07f3_x.jpg
+2024-10-02 16:46:34,880 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/7/2/6/4731627/c60ea974-232d-4884-8c0a-472379ac53e4_x.jpg
+2024-10-02 16:46:35,430 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/7/2/6/4731627/ee83c480-c929-4573-8579-b1a6265f9227_x.jpg
+2024-10-02 16:46:35,972 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/7/2/6/4731627/cc5c7560-37b5-4fcc-abee-6b65ea07bab4_x.jpg
+2024-10-02 16:46:36,503 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/7/2/6/4731627/5ad2c260-465d-4469-9570-e88c8cb274f2_x.jpg
+2024-10-02 16:46:37,038 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/7/2/6/4731627/b7be0e85-50e8-4dac-834f-f8f8b5f5a3bf_x.jpg
+2024-10-02 16:46:37,577 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/7/2/6/4731627/93f71b64-f1a6-44a7-b89f-21b9d2aea9b7_x.jpg
+2024-10-02 16:46:38,119 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/7/2/6/4731627/0f0d51e9-8834-4aa3-9b2d-5b14919d4f71_x.jpg
+2024-10-02 16:46:38,652 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/7/2/6/4731627/e5eb05d8-59d1-47f7-8594-c0c799d13933_x.jpg
+2024-10-02 16:46:39,187 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/7/2/6/4731627/69136792-c6ad-4a5a-a79f-1959acdd8b85_x.jpg
+2024-10-02 16:46:39,730 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/7/2/6/4731627/15db6b54-08a6-4157-89ad-d642d7293aa8_x.jpg
+2024-10-02 16:46:40,262 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/7/2/6/4731627/7dddd03f-f685-4fd6-826c-c56fea45272f_x.jpg
+2024-10-02 16:46:40,798 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/7/2/6/4731627/3c425a52-a184-40ce-81ee-8e63d5563ac5_x.jpg
+2024-10-02 16:46:41,346 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/7/2/6/4731627/913d2184-5e4f-44bc-af01-fea20d66be82_x.jpg
+2024-10-02 16:46:41,884 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/7/2/6/4731627/bca0f63d-933b-4b38-bcba-be01e3064117_x.jpg
+2024-10-02 16:46:42,436 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/7/2/6/4731627/441a57a5-6d43-4d19-a703-6dea5e8eeda4_x.jpg
+2024-10-02 16:46:42,971 - INFO - Duplicate image URL encountered: https://photos-a.propertyimages.ie/media/7/2/6/4731627/a5d8ab1c-3926-4572-8db5-6ddb87d5788e_x.jpg. Stopping.
+2024-10-02 16:46:43,061 - INFO - Image WebDriver closed after scraping images.
+2024-10-02 16:46:43,061 - INFO - Found 21 image URLs for 87 Haddington Road, Dublin 4, D04WP23
+2024-10-02 16:46:43,215 - DEBUG - Downloaded data/processed/my_home_images/87-haddington-road--dublin-4--d04wp23/image_003.jpg
+2024-10-02 16:46:43,243 - DEBUG - Downloaded data/processed/my_home_images/87-haddington-road--dublin-4--d04wp23/image_005.jpg
+2024-10-02 16:46:43,247 - DEBUG - Downloaded data/processed/my_home_images/87-haddington-road--dublin-4--d04wp23/image_002.jpg
+2024-10-02 16:46:43,250 - DEBUG - Downloaded data/processed/my_home_images/87-haddington-road--dublin-4--d04wp23/image_004.jpg
+2024-10-02 16:46:43,276 - DEBUG - Downloaded data/processed/my_home_images/87-haddington-road--dublin-4--d04wp23/image_001.jpg
+2024-10-02 16:46:43,346 - DEBUG - Downloaded data/processed/my_home_images/87-haddington-road--dublin-4--d04wp23/image_006.jpg
+2024-10-02 16:46:43,368 - DEBUG - Downloaded data/processed/my_home_images/87-haddington-road--dublin-4--d04wp23/image_008.jpg
+2024-10-02 16:46:43,373 - DEBUG - Downloaded data/processed/my_home_images/87-haddington-road--dublin-4--d04wp23/image_007.jpg
+2024-10-02 16:46:43,387 - DEBUG - Downloaded data/processed/my_home_images/87-haddington-road--dublin-4--d04wp23/image_009.jpg
+2024-10-02 16:46:43,399 - DEBUG - Downloaded data/processed/my_home_images/87-haddington-road--dublin-4--d04wp23/image_010.jpg
+2024-10-02 16:46:43,462 - DEBUG - Downloaded data/processed/my_home_images/87-haddington-road--dublin-4--d04wp23/image_011.jpg
+2024-10-02 16:46:43,490 - DEBUG - Downloaded data/processed/my_home_images/87-haddington-road--dublin-4--d04wp23/image_013.jpg
+2024-10-02 16:46:43,502 - DEBUG - Downloaded data/processed/my_home_images/87-haddington-road--dublin-4--d04wp23/image_012.jpg
+2024-10-02 16:46:43,504 - DEBUG - Downloaded data/processed/my_home_images/87-haddington-road--dublin-4--d04wp23/image_015.jpg
+2024-10-02 16:46:43,515 - DEBUG - Downloaded data/processed/my_home_images/87-haddington-road--dublin-4--d04wp23/image_014.jpg
+2024-10-02 16:46:43,576 - DEBUG - Downloaded data/processed/my_home_images/87-haddington-road--dublin-4--d04wp23/image_016.jpg
+2024-10-02 16:46:43,609 - DEBUG - Downloaded data/processed/my_home_images/87-haddington-road--dublin-4--d04wp23/image_017.jpg
+2024-10-02 16:46:43,624 - DEBUG - Downloaded data/processed/my_home_images/87-haddington-road--dublin-4--d04wp23/image_018.jpg
+2024-10-02 16:46:43,638 - DEBUG - Downloaded data/processed/my_home_images/87-haddington-road--dublin-4--d04wp23/image_019.jpg
+2024-10-02 16:46:43,656 - DEBUG - Downloaded data/processed/my_home_images/87-haddington-road--dublin-4--d04wp23/image_020.jpg
+2024-10-02 16:46:43,718 - DEBUG - Downloaded data/processed/my_home_images/87-haddington-road--dublin-4--d04wp23/image_021.jpg
+2024-10-02 16:46:43,721 - INFO - Downloaded 21 out of 21 images for 87 Haddington Road, Dublin 4, D04WP23
+2024-10-02 16:46:43,722 - INFO - Written data for: 87 Haddington Road, Dublin 4, D04WP23
+2024-10-02 16:46:43,834 - INFO - WebDriver closed.
+2024-10-02 16:46:43,836 - INFO - Saved final snapshot to data/processed/my_home_images_snapshots/snapshot_1.csv
+2024-10-02 16:46:43,836 - INFO - Saved final results to data/processed/my_home_images_final_results.csv
+2024-10-02 16:46:43,837 - INFO - Processing complete. Results saved to data/processed/scraped_dublin_metadata/scraped_property_results_metadata_Dublin_page_1_test.csv

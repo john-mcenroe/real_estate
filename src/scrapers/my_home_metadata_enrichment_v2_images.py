@@ -196,15 +196,12 @@ def parse_listing(url, driver):
             if match:
                 floor_area_value = match.group(1)
                 data["MyHome_Floor_Area_Value"] = floor_area_value
-                data["MyHome_Floor_Area_Unit"] = "m²"
                 logger.debug(f"Extracted floor area: {floor_area_value} m²")
             else:
                 data["MyHome_Floor_Area_Value"] = ""
-                data["MyHome_Floor_Area_Unit"] = ""
                 logger.warning("Floor area value not found.")
         except NoSuchElementException:
             data["MyHome_Floor_Area_Value"] = ""
-            data["MyHome_Floor_Area_Unit"] = ""
             logger.warning("Floor area element not found.")
 
         # Extract BER information
@@ -214,8 +211,6 @@ def parse_listing(url, driver):
                 "//p[contains(@class, 'brochure__details--description-content')]",
             )
             data["MyHome_BER_Rating"] = ""
-            data["MyHome_BER_Number"] = ""
-            data["MyHome_Energy_Performance_Indicator"] = ""
             for ber_element in ber_elements:
                 ber_text = ber_element.text.strip()
                 if "BER" in ber_text:
@@ -224,20 +219,12 @@ def parse_listing(url, driver):
                         if "BER:" in part:
                             data["MyHome_BER_Rating"] = part.replace("BER:", "").strip()
                             logger.debug(f"Extracted BER Rating: {data['MyHome_BER_Rating']}")
-                        elif "BER No:" in part:
-                            data["MyHome_BER_Number"] = part.replace("BER No:", "").strip()
-                            logger.debug(f"Extracted BER Number: {data['MyHome_BER_Number']}")
-                        elif "Energy Performance Indicator:" in part:
-                            data["MyHome_Energy_Performance_Indicator"] = part.replace(
-                                "Energy Performance Indicator:", ""
-                            ).strip()
-                            logger.debug(f"Extracted Energy Performance Indicator: {data['MyHome_Energy_Performance_Indicator']}")
                     break  # Assuming only one BER section exists
         except Exception as e:
             logger.error(f"Error extracting BER info: {e}")
 
         # Set default values for optional fields (Removed specified fields)
-        data.setdefault("MyHome_Link", "")
+        # Since we have removed these columns, we won't set them
 
         logger.info(f"Extracted data for {url}: {data}")
 
@@ -418,6 +405,9 @@ def process_csv(input_file, output_file, api_key, limit=500, headless=True):
             if not address:
                 logger.warning(f"No address found for record {i+1}. Skipping.")
                 results.append({"Address": address, "Images_Found": False})
+                # Add empty values for MyHome fields
+                for field in MYHOME_FIELDS:
+                    row[field] = ""
                 continue
 
             try:
@@ -434,7 +424,8 @@ def process_csv(input_file, output_file, api_key, limit=500, headless=True):
 
                     # Update row with listing data
                     for key, value in listing_data.items():
-                        row[key] = value
+                        if key in MYHOME_FIELDS:
+                            row[key] = value
 
                     # Get latitude and longitude
                     lat, lng = get_latitude_longitude(address, api_key)
