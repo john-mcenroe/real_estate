@@ -357,7 +357,7 @@ def create_snapshot(output_file, snapshot_number):
 
 # ----------------------------- Main Processing Function -----------------------------
 
-def process_csv(input_file, output_file, api_key, limit=500, headless=True):
+def process_csv(input_file, output_file, api_key, limit=2500, headless=True):
     """Process the input CSV to enrich data with MyHome.ie listing details and images."""
     # Read the CSV into a DataFrame
     try:
@@ -436,7 +436,7 @@ def process_csv(input_file, output_file, api_key, limit=500, headless=True):
 
                     # Scrape and download images using a separate driver
                     property_folder = os.path.join(
-                        "data", "processed", "my_home_images_test", slugify(address)
+                        "data", "processed", "scraped_dublin", "images", slugify(address)
                     )
                     os.makedirs(property_folder, exist_ok=True)
                     image_urls = scrape_images(myhome_url, property_folder)
@@ -528,10 +528,10 @@ def process_csv(input_file, output_file, api_key, limit=500, headless=True):
 
 if __name__ == "__main__":
     # Configuration via environment variables or defaults
-    input_file = os.getenv("INPUT_CSV_PATH", "/Users/johnmcenroe/Documents/programming_misc/real_estate/scraped_Dublin/scraped_property_results_Dublin_final.csv")
-    output_file = os.getenv("OUTPUT_CSV_PATH", "/Users/johnmcenroe/Documents/programming_misc/real_estate/scraped_Dublin/scraped_property_results_Dublin_final_with_metadata.csv")
+    input_file = os.getenv("INPUT_CSV_PATH", "/Users/johnmcenroe/Documents/programming_misc/real_estate/data/processed/scraped_dublin/combine_and_dedupe/manual_combined_scraped_property_results_Dublin_deduped.csv")
+    output_file = os.getenv("OUTPUT_CSV_PATH", "/Users/johnmcenroe/Documents/programming_misc/real_estate/data/processed/scraped_dublin/added_metadata/scraped_property_results_Dublin_final_with_metadata.csv")
     api_key = os.getenv("GOOGLE_MAPS_API_KEY")
-    limit = int(os.getenv("PROCESS_LIMIT", "2"))  # Set to 500 or desired number in production
+    limit = int(os.getenv("PROCESS_LIMIT", "2500"))  # Set to 500 or desired number in production
     headless = os.getenv("HEADLESS_MODE", "True").lower() in ["true", "1", "yes"]
 
     if not api_key:
