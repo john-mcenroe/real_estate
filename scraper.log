@@ -8506,3 +8506,100 @@ Stacktrace:
 2024-10-02 23:41:02,065 - INFO - Data saved to scraped_Dublin/scraped_property_results_Dublin_final.csv
 2024-10-02 23:41:02,066 - INFO - Final property details saved to scraped_Dublin/scraped_property_results_Dublin_final.csv
 2024-10-02 23:41:02,066 - INFO - Scraping process completed.
+2024-10-03 21:26:37,625 - INFO - Starting CSV processing...
+2024-10-03 21:26:37,628 - INFO - Loaded 2 records from input CSV (limit set to 2).
+2024-10-03 21:26:37,628 - INFO - Initialized output CSV with headers.
+2024-10-03 21:26:38,425 - DEBUG - WebDriver initialized successfully.
+2024-10-03 21:26:38,430 - INFO - Processing record 1: 22 Mount Rochford Avenue, Balbriggan, Co. Dublin, K32E628
+2024-10-03 21:26:39,919 - INFO - Found 23 URLs from Google search for query '22 Mount Rochford Avenue, Balbriggan, Co. Dublin, K32E628'.
+2024-10-03 21:26:39,919 - INFO - Filtered 2 MyHome.ie links.
+2024-10-03 21:26:39,919 - INFO - Found MyHome.ie link: https://www.myhome.ie/priceregister/22-mount-rochford-ave-dublin-balbriggan-co-dublin-k32e628-1738674
+2024-10-03 21:26:42,038 - INFO - Opened URL: https://www.myhome.ie/priceregister/22-mount-rochford-ave-dublin-balbriggan-co-dublin-k32e628-1738674
+2024-10-03 21:26:42,586 - INFO - Privacy popup accepted.
+2024-10-03 21:26:54,830 - WARNING - Element not found: h1.h4.fw-bold
+2024-10-03 21:27:05,109 - WARNING - Element not found: b.brochure__price
+2024-10-03 21:27:15,392 - WARNING - Element not found: //span[contains(@class, 'info-strip--divider') and contains(text(), 'beds')]
+2024-10-03 21:27:25,654 - WARNING - Element not found: //span[contains(@class, 'info-strip--divider') and contains(text(), 'baths')]
+2024-10-03 21:27:25,671 - WARNING - Floor area element not found.
+2024-10-03 21:27:25,682 - INFO - Extracted data for https://www.myhome.ie/priceregister/22-mount-rochford-ave-dublin-balbriggan-co-dublin-k32e628-1738674: {'MyHome_Link': 'https://www.myhome.ie/priceregister/22-mount-rochford-ave-dublin-balbriggan-co-dublin-k32e628-1738674', 'MyHome_Address': '', 'MyHome_Asking_Price': '', 'MyHome_Beds': '', 'MyHome_Baths': '', 'MyHome_Floor_Area_Value': '', 'MyHome_BER_Rating': ''}
+2024-10-03 21:27:25,935 - DEBUG - Geocoded '22 Mount Rochford Avenue, Balbriggan, Co. Dublin, K32E628' to (lat: 53.6175672, lng: -6.1997553)
+2024-10-03 21:27:26,761 - DEBUG - WebDriver initialized successfully.
+2024-10-03 21:27:29,668 - INFO - Opened URL for images: https://www.myhome.ie/priceregister/22-mount-rochford-ave-dublin-balbriggan-co-dublin-k32e628-1738674
+2024-10-03 21:27:29,717 - INFO - Privacy popup accepted for images.
+2024-10-03 21:27:41,928 - ERROR - Main image not found or not clickable for images.
+2024-10-03 21:27:42,029 - INFO - Image WebDriver closed after scraping images.
+2024-10-03 21:27:42,030 - INFO - Found 0 image URLs for 22 Mount Rochford Avenue, Balbriggan, Co. Dublin, K32E628
+2024-10-03 21:27:42,030 - INFO - Downloaded 0 out of 0 images for 22 Mount Rochford Avenue, Balbriggan, Co. Dublin, K32E628
+2024-10-03 21:27:42,030 - INFO - Written data for: 22 Mount Rochford Avenue, Balbriggan, Co. Dublin, K32E628
+2024-10-03 21:27:42,031 - INFO - Processing record 2: 194 Barton Road East, Dundrum, Dundrum, Dublin 14, D14DP96
+2024-10-03 21:27:43,504 - INFO - Found 23 URLs from Google search for query '194 Barton Road East, Dundrum, Dundrum, Dublin 14, D14DP96'.
+2024-10-03 21:27:43,504 - INFO - Filtered 6 MyHome.ie links.
+2024-10-03 21:27:43,504 - INFO - Found MyHome.ie link: https://www.myhome.ie/residential/brochure/194-barton-road-east-churchtown-dublin-14-co-dublin-dundrum-dublin-14/4775378
+2024-10-03 21:27:44,662 - INFO - Opened URL: https://www.myhome.ie/residential/brochure/194-barton-road-east-churchtown-dublin-14-co-dublin-dundrum-dublin-14/4775378
+2024-10-03 21:27:54,898 - INFO - Privacy popup not found or already handled.
+2024-10-03 21:27:54,919 - DEBUG - Extracted text for selector 'h1.h4.fw-bold': '194 Barton Road East, Churchtown, Dublin 14, Co. Dublin, Dundrum, Dublin 14'
+2024-10-03 21:27:54,926 - DEBUG - Extracted text for selector 'b.brochure__price': 'Sale Agreed'
+2024-10-03 21:27:54,934 - DEBUG - Extracted text for selector '//span[contains(@class, 'info-strip--divider') and contains(text(), 'beds')]': '3 beds'
+2024-10-03 21:27:54,941 - DEBUG - Extracted text for selector '//span[contains(@class, 'info-strip--divider') and contains(text(), 'baths')]': '2 baths'
+2024-10-03 21:27:54,948 - DEBUG - Extracted floor area: 93.65 m²
+2024-10-03 21:27:54,954 - INFO - Extracted data for https://www.myhome.ie/residential/brochure/194-barton-road-east-churchtown-dublin-14-co-dublin-dundrum-dublin-14/4775378: {'MyHome_Link': 'https://www.myhome.ie/residential/brochure/194-barton-road-east-churchtown-dublin-14-co-dublin-dundrum-dublin-14/4775378', 'MyHome_Address': '194 Barton Road East, Churchtown, Dublin 14, Co. Dublin, Dundrum, Dublin 14', 'MyHome_Asking_Price': 'Sale Agreed', 'MyHome_Beds': '3 beds', 'MyHome_Baths': '2 baths', 'MyHome_Floor_Area_Value': '93.65', 'MyHome_BER_Rating': ''}
+2024-10-03 21:27:55,164 - DEBUG - Geocoded '194 Barton Road East, Dundrum, Dundrum, Dublin 14, D14DP96' to (lat: 53.288329, lng: -6.249039)
+2024-10-03 21:27:55,980 - DEBUG - WebDriver initialized successfully.
+2024-10-03 21:27:58,711 - INFO - Opened URL for images: https://www.myhome.ie/residential/brochure/194-barton-road-east-churchtown-dublin-14-co-dublin-dundrum-dublin-14/4775378
+2024-10-03 21:27:58,757 - INFO - Privacy popup accepted for images.
+2024-10-03 21:28:00,823 - INFO - Clicked main image to open carousel for images.
+2024-10-03 21:28:02,846 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/2aabcdf4-8ea4-496c-b459-4f1e5bb8f5bb_x.jpg
+2024-10-03 21:28:03,400 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/02546dc3-3413-4f66-acbb-3b29d7196c33_x.jpg
+2024-10-03 21:28:03,952 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/31c4a71c-7316-44d4-abbb-d85f9397a73e_x.jpg
+2024-10-03 21:28:04,500 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/dd3e9c02-d9cd-4b1b-9246-090a7270aa22_x.jpg
+2024-10-03 21:28:05,053 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/313f7606-1a7b-4c53-a71e-7112bc982e9a_x.jpg
+2024-10-03 21:28:05,610 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/29c562b7-a5f3-4d3e-b2d2-3ea1e03b09e3_x.jpg
+2024-10-03 21:28:06,159 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/e7686a31-1ce7-44f0-a6bd-bae0aafe0de5_x.jpg
+2024-10-03 21:28:06,700 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/33df5551-3564-48a5-8cca-bb9b14bc2f6d_x.jpg
+2024-10-03 21:28:07,235 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/302bf3ea-cc1e-4208-85e3-d93bbf60721b_x.jpg
+2024-10-03 21:28:07,772 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/8ee20079-9983-415c-83f7-48fb16014258_x.jpg
+2024-10-03 21:28:08,343 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/5de02009-be99-4de5-856e-d5b2f91f8502_x.jpg
+2024-10-03 21:28:08,880 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/a2a78ecf-76d1-4e31-95e1-bc045d2b0143_x.jpg
+2024-10-03 21:28:09,414 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/13ee3481-f049-49c9-b15d-40b431c49691_x.jpg
+2024-10-03 21:28:09,946 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/d2247e3d-8892-45b4-a34a-b6abce061081_x.jpg
+2024-10-03 21:28:10,499 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/01a73f0f-a187-4d99-a5b1-6d4960474750_x.jpg
+2024-10-03 21:28:11,039 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/02fb1c88-aa0f-4c37-ba31-b1c109096c4b_x.jpg
+2024-10-03 21:28:11,577 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/9b6e4d44-e58e-4df3-926f-cf3c3f6b785d_x.jpg
+2024-10-03 21:28:12,121 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/c279e444-07b8-4956-a762-ab444834a4c6_x.jpg
+2024-10-03 21:28:12,667 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/ba45d022-a79d-40df-966a-1395732d8705_x.jpg
+2024-10-03 21:28:13,211 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/a28dee0f-d3d2-4e45-a631-d32f2cb7aa94_x.jpg
+2024-10-03 21:28:13,758 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/68b06b60-8c91-4a93-be19-13055f14b686_x.jpg
+2024-10-03 21:28:14,296 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/f09860ff-b3e9-427f-b9ee-64c10d940e75_x.jpg
+2024-10-03 21:28:14,833 - INFO - Found image URL: https://photos-a.propertyimages.ie/media/8/7/3/4775378/03719d79-e626-4585-8986-9087b2f0f523_x.jpg
+2024-10-03 21:28:15,379 - INFO - Duplicate image URL encountered: https://photos-a.propertyimages.ie/media/8/7/3/4775378/2aabcdf4-8ea4-496c-b459-4f1e5bb8f5bb_x.jpg. Stopping.
+2024-10-03 21:28:15,477 - INFO - Image WebDriver closed after scraping images.
+2024-10-03 21:28:15,477 - INFO - Found 23 image URLs for 194 Barton Road East, Dundrum, Dundrum, Dublin 14, D14DP96
+2024-10-03 21:28:15,666 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_001.jpg
+2024-10-03 21:28:15,873 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_004.jpg
+2024-10-03 21:28:15,891 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_002.jpg
+2024-10-03 21:28:15,902 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_003.jpg
+2024-10-03 21:28:16,040 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_006.jpg
+2024-10-03 21:28:16,176 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_005.jpg
+2024-10-03 21:28:16,196 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_007.jpg
+2024-10-03 21:28:16,224 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_009.jpg
+2024-10-03 21:28:16,245 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_008.jpg
+2024-10-03 21:28:16,416 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_011.jpg
+2024-10-03 21:28:16,432 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_010.jpg
+2024-10-03 21:28:16,477 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_012.jpg
+2024-10-03 21:28:16,487 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_013.jpg
+2024-10-03 21:28:16,558 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_014.jpg
+2024-10-03 21:28:16,718 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_016.jpg
+2024-10-03 21:28:16,759 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_018.jpg
+2024-10-03 21:28:16,765 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_015.jpg
+2024-10-03 21:28:16,768 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_017.jpg
+2024-10-03 21:28:16,947 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_019.jpg
+2024-10-03 21:28:17,062 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_023.jpg
+2024-10-03 21:28:17,165 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_020.jpg
+2024-10-03 21:28:17,185 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_021.jpg
+2024-10-03 21:28:17,246 - DEBUG - Downloaded data/processed/my_home_images_test/194-barton-road-east--dundrum--dundrum--dublin-14--d14dp96/image_022.jpg
+2024-10-03 21:28:17,250 - INFO - Downloaded 23 out of 23 images for 194 Barton Road East, Dundrum, Dundrum, Dublin 14, D14DP96
+2024-10-03 21:28:17,251 - INFO - Written data for: 194 Barton Road East, Dundrum, Dundrum, Dublin 14, D14DP96
+2024-10-03 21:28:17,372 - INFO - WebDriver closed.
+2024-10-03 21:28:17,375 - INFO - Saved final snapshot to data/processed/my_home_images_snapshots/snapshot_1.csv
+2024-10-03 21:28:17,375 - INFO - Saved final results to data/processed/my_home_images_final_results.csv
+2024-10-03 21:28:17,376 - INFO - Processing complete. Results saved to /Users/johnmcenroe/Documents/programming_misc/real_estate/scraped_Dublin/scraped_property_results_Dublin_final_with_metadata.csv
