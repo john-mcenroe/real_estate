@@ -22,7 +22,7 @@ def remove_duplicates_from_file(file_path):
     print(f"Deduplicated file saved to: {output_path}")
 
 # File path to your CSV file
-file_path = '/Users/johnmcenroe/Documents/programming_misc/real_estate/data/processed/scraped_dublin/combine_and_dedupe/manual_combined_scraped_property_results_Dublin.csv'
+file_path = '/Users/johnmcenroe/Documents/programming_misc/real_estate/data/processed/scraped_dublin/added_metadata/scraped_property_results_Dublin_final_with_metadata.csv'
 
 # Run the function
 remove_duplicates_from_file(file_path)
