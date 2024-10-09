@@ -40,7 +40,7 @@ except WebDriverException as e:
 
 # Set parameters
 region = "Dublin"  # Parameterized region name
-start_page = 25  # Starting page number
+start_page = 36  # Starting page number
 url = f"https://mynest.ie/priceregister/{region}/{start_page}"
 logging.info(f"Navigating to URL: {url}")
 driver.get(url)
