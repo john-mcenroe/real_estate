@@ -7,8 +7,8 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
-# Import XGBoost Regressor
-from xgboost import XGBRegressor
+# Import Random Forest Regressor
+from sklearn.ensemble import RandomForestRegressor  # Updated import
 
 # For handling missing values
 from sklearn.impute import SimpleImputer
@@ -226,17 +226,16 @@ print("\nTraining set shape:", X_train.shape)
 print("Test set shape:", X_test.shape)
 
 # =========================================
-# 17. Create the Modeling Pipeline with XGBoost
+# 17. Create the Modeling Pipeline with Random Forest
 # =========================================
 model_pipeline = Pipeline(steps=[
     ('preprocessor', preprocessor),
-    ('regressor', XGBRegressor(
+    ('regressor', RandomForestRegressor(  # Updated regressor
         n_estimators=100,
-        learning_rate=0.1,
         max_depth=6,
         random_state=42,
-        n_jobs=-1,
-        objective='reg:squarederror'  # Specify the objective for regression
+        n_jobs=-1
+        # Removed 'learning_rate' and 'objective' parameters
     ))
 ])
 
@@ -261,7 +260,7 @@ y_pred = model_pipeline.predict(X_test)
 rmse = np.sqrt(mean_squared_error(y_test, y_pred))
 r2 = r2_score(y_test, y_pred)
 
-print("\nXGBoost Regressor Performance on Test Set:")
+print("\nRandom Forest Regressor Performance on Test Set:")
 print(f"Root Mean Squared Error (RMSE): {rmse:,.2f}")
 print(f"R² Score: {r2:.2f}")
 
@@ -369,7 +368,7 @@ print(final_test_df.head())
 # =========================================
 
 # Define the output CSV path in the same directory as the input CSV
-output_filename = 'final_test_predictions_xgboost.csv'
+output_filename = 'final_test_predictions_random_forest.csv'  # Updated filename
 output_path = os.path.join(os.path.dirname(input_path), output_filename)
 
 # Save the DataFrame to CSV

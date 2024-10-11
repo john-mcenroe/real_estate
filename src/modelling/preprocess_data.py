@@ -794,6 +794,157 @@ def calculate_metrics_for_row(df, row):
                 new_columns[f'pricing_consistency_price_change_freq_within_{distance}km'] = price_change_freq
             else:
                 new_columns[f'pricing_consistency_price_change_freq_within_{distance}km'] = np.nan
+    
+    # 1. Market Trends
+    days_back = 180
+    days_period = 30
+
+    # Calculate the average sold price for the last 30 days
+    mask_last_30_days = (df['Dynamic Geo Distance (km)'] <= 5) & \
+                        (df['Sold Date'] >= (row['Sold Date'] - timedelta(days=days_period)))
+    filtered_last_30_days = df[mask_last_30_days]
+    avg_price_last_30_days = filtered_last_30_days['Sold Price'].mean() if not filtered_last_30_days.empty else np.nan
+
+    # Calculate the average sold price for the period 180-210 days ago
+    mask_180_210_days = (df['Dynamic Geo Distance (km)'] <= 5) & \
+                        (df['Sold Date'] >= (row['Sold Date'] - timedelta(days=days_back + days_period))) & \
+                        (df['Sold Date'] < (row['Sold Date'] - timedelta(days=days_back)))
+    filtered_180_210_days = df[mask_180_210_days]
+    avg_price_180_210_days = filtered_180_210_days['Sold Price'].mean() if not filtered_180_210_days.empty else np.nan
+
+    # Calculate the percentage change
+    if pd.notna(avg_price_last_30_days) and pd.notna(avg_price_180_210_days) and avg_price_180_210_days != 0:
+        percent_change = ((avg_price_last_30_days - avg_price_180_210_days) / avg_price_180_210_days) * 100
+    else:
+        percent_change = np.nan
+
+    new_columns['market_trends_percent_change_30day_avg'] = percent_change
+
+    # 3. Price vs. Dataset Benchmarks
+    if 'Sold Price' in df.columns:
+        # Calculate median sold price within 3KM
+        mask_3km = (df['Dynamic Geo Distance (km)'] <= 3)
+        median_3km = df.loc[mask_3km, 'Sold Price'].median()
+
+        # Calculate median sold price within 10KM
+        mask_10km = (df['Dynamic Geo Distance (km)'] <= 10)
+        median_10km = df.loc[mask_10km, 'Sold Price'].median()
+
+        # Calculate overall median sold price
+        overall_median = df['Sold Price'].median()
+
+        # New column: Ratio of 3KM median to 10KM median
+        new_columns['price_benchmarks_ratio_3km_to_10km'] = median_3km / median_10km if median_10km else np.nan
+
+        # New column: Ratio of 10KM median to overall median
+        new_columns['price_benchmarks_ratio_10km_to_overall'] = median_10km / overall_median if overall_median else np.nan
+
+    # 4. Value to Asking Ratio in Area
+    # Value to Asking Ratio in Area for 1km, 3km, and 5km
+    for distance in [1, 3, 5]:
+        mask = (df['Dynamic Geo Distance (km)'] <= distance)
+        filtered = df[mask]
+        if not filtered.empty and 'Sold Price' in filtered.columns and 'Asking Price' in filtered.columns:
+            value_asking_ratio = (filtered['Sold Price'] / filtered['Asking Price']).mean()
+            new_columns[f'price_dynamics_area_value_asking_ratio_{distance}km'] = value_asking_ratio
+        else:
+            new_columns[f'price_dynamics_area_value_asking_ratio_{distance}km'] = np.nan
+
+    # Price Trend Metrics
+    # Calculate price trend over 30 and 90 days within 3km and 5km
+    for period, distance in [(30, 3), (30, 5), (90, 3), (90, 5)]:
+        if 'Dynamic Geo Distance (km)' in df.columns and 'Sold Date' in df.columns and 'Sold Price' in df.columns:
+            mask_recent = (df['Dynamic Geo Distance (km)'] <= distance) & (df['Sold Date'] >= (row['Sold Date'] - timedelta(days=period)))
+            mask_previous = (df['Dynamic Geo Distance (km)'] <= distance) & (df['Sold Date'] < (row['Sold Date'] - timedelta(days=period))) & (df['Sold Date'] >= (row['Sold Date'] - timedelta(days=period * 2)))
+            avg_price_recent = df[mask_recent]['Sold Price'].mean()
+            avg_price_previous = df[mask_previous]['Sold Price'].mean()
+
+            if pd.notna(avg_price_recent) and pd.notna(avg_price_previous) and avg_price_previous != 0:
+                price_trend_change = (avg_price_recent - avg_price_previous) / avg_price_previous * 100
+            else:
+                price_trend_change = np.nan
+
+            new_columns[f'price_trend_{period}_days_{distance}km'] = price_trend_change
+        else:
+            logging.warning(f"Missing required columns for price trend calculation ({period} days, {distance}km)")
+            new_columns[f'price_trend_{period}_days_{distance}km'] = np.nan
+
+    # Sold-to-Asking Price Ratio
+    for distance in [1, 3, 5]:
+        if 'Dynamic Geo Distance (km)' in df.columns and 'Sold Price' in df.columns and 'Asking Price' in df.columns:
+            mask = (df['Dynamic Geo Distance (km)'] <= distance)
+            filtered = df[mask]
+            if not filtered.empty:
+                sold_to_asking_ratio = (filtered['Sold Price'] / filtered['Asking Price']).mean()
+                new_columns[f'sold_to_asking_ratio_{distance}km'] = sold_to_asking_ratio
+            else:
+                new_columns[f'sold_to_asking_ratio_{distance}km'] = np.nan
+        else:
+            logging.warning(f"Missing required columns for sold-to-asking price ratio calculation ({distance}km)")
+            new_columns[f'sold_to_asking_ratio_{distance}km'] = np.nan
+
+    # Time to Sale
+    for distance in [3, 5]:
+        if 'Dynamic Geo Distance (km)' in df.columns and 'Sold Date' in df.columns and 'First List Date' in df.columns:
+            mask = (df['Dynamic Geo Distance (km)'] <= distance) & (df['Sold Date'].notna()) & (df['First List Date'].notna())
+            filtered = df[mask]
+            if not filtered.empty:
+                time_to_sale = (filtered['Sold Date'] - filtered['First List Date']).dt.days.mean()
+                new_columns[f'avg_time_to_sale_{distance}km'] = time_to_sale
+            else:
+                new_columns[f'avg_time_to_sale_{distance}km'] = np.nan
+        else:
+            logging.warning(f"Missing required columns for time to sale calculation ({distance}km)")
+            new_columns[f'avg_time_to_sale_{distance}km'] = np.nan
+
+    # Price Fluctuation
+    for distance in [3, 5]:
+        if 'Dynamic Geo Distance (km)' in df.columns and 'Price Changes' in df.columns and 'Asking Price' in df.columns:
+            mask = (df['Dynamic Geo Distance (km)'] <= distance) & (df['Price Changes'].notna())
+            filtered = df[mask]
+            if not filtered.empty:
+                price_fluctuation = ((filtered['Price Changes'].astype(float)) / filtered['Asking Price']).mean()
+                new_columns[f'avg_asking_price_fluctuation_{distance}km'] = price_fluctuation
+            else:
+                new_columns[f'avg_asking_price_fluctuation_{distance}km'] = np.nan
+        else:
+            logging.warning(f"Missing required columns for price fluctuation calculation ({distance}km)")
+            new_columns[f'avg_asking_price_fluctuation_{distance}km'] = np.nan
+
+    # Percentage of listings with price drop
+    for distance in [3, 5]:
+        if 'Dynamic Geo Distance (km)' in df.columns and 'Price Changes' in df.columns:
+            mask = (df['Dynamic Geo Distance (km)'] <= distance) & (df['Price Changes'].notna())
+            filtered = df[mask]
+            if not filtered.empty:
+                percent_price_drop = (filtered['Price Changes'].astype(float) < 0).mean() * 100
+                new_columns[f'percent_listings_with_price_drop_{distance}km'] = percent_price_drop
+            else:
+                new_columns[f'percent_listings_with_price_drop_{distance}km'] = np.nan
+        else:
+            logging.warning(f"Missing required columns for price drop percentage calculation ({distance}km)")
+            new_columns[f'percent_listings_with_price_drop_{distance}km'] = np.nan
+
+    # Market Saturation Metrics
+    for distance in [3, 5]:
+        if 'Dynamic Geo Distance (km)' in df.columns and 'First List Date' in df.columns and 'Sold Date' in df.columns:
+            new_listings_mask = (df['Dynamic Geo Distance (km)'] <= distance) & (df['First List Date'] >= (row['Sold Date'] - timedelta(days=30)))
+            new_listings = df[new_listings_mask].shape[0]
+            total_listings = df[(df['Dynamic Geo Distance (km)'] <= distance)].shape[0]
+
+            if total_listings > 0:
+                new_columns[f'new_listings_last_30_days_{distance}km'] = new_listings
+                new_columns[f'percent_active_listings_vs_sold_{distance}km'] = (new_listings / total_listings) * 100
+            else:
+                new_columns[f'new_listings_last_30_days_{distance}km'] = np.nan
+                new_columns[f'percent_active_listings_vs_sold_{distance}km'] = np.nan
+        else:
+            logging.warning(f"Missing required columns for market saturation metrics calculation ({distance}km)")
+            new_columns[f'new_listings_last_30_days_{distance}km'] = np.nan
+            new_columns[f'percent_active_listings_vs_sold_{distance}km'] = np.nan
+            
+    # Add this at the beginning of the function to log available columns
+    logging.info(f"Available columns: {df.columns.tolist()}")            
 
     return new_columns
 

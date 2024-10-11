@@ -7,8 +7,8 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
-# Import XGBoost Regressor
-from xgboost import XGBRegressor
+# Import K-Nearest Neighbors Regressor
+from sklearn.neighbors import KNeighborsRegressor  # Updated import
 
 # For handling missing values
 from sklearn.impute import SimpleImputer
@@ -19,6 +19,9 @@ from sklearn.metrics import mean_squared_error, r2_score
 # For feature importance visualization
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+# For feature importance analysis
+from sklearn.inspection import permutation_importance
 
 # For version checking
 import sklearn
@@ -226,17 +229,18 @@ print("\nTraining set shape:", X_train.shape)
 print("Test set shape:", X_test.shape)
 
 # =========================================
-# 17. Create the Modeling Pipeline with XGBoost
+# 17. Create the Modeling Pipeline with K-Nearest Neighbors
 # =========================================
 model_pipeline = Pipeline(steps=[
     ('preprocessor', preprocessor),
-    ('regressor', XGBRegressor(
-        n_estimators=100,
-        learning_rate=0.1,
-        max_depth=6,
-        random_state=42,
-        n_jobs=-1,
-        objective='reg:squarederror'  # Specify the objective for regression
+    ('regressor', KNeighborsRegressor(  # Updated regressor
+        n_neighbors=5,            # Number of neighbors
+        weights='uniform',        # 'uniform' or 'distance'
+        algorithm='auto',         # 'auto', 'ball_tree', 'kd_tree', 'brute'
+        leaf_size=30,             # Leaf size for tree-based algorithms
+        p=2,                      # Power parameter for Minkowski metric (p=2 for Euclidean)
+        metric='minkowski',       # Distance metric
+        n_jobs=-1                  # Number of parallel jobs
     ))
 ])
 
@@ -261,52 +265,70 @@ y_pred = model_pipeline.predict(X_test)
 rmse = np.sqrt(mean_squared_error(y_test, y_pred))
 r2 = r2_score(y_test, y_pred)
 
-print("\nXGBoost Regressor Performance on Test Set:")
+print("\nK-Nearest Neighbors Regressor Performance on Test Set:")
 print(f"Root Mean Squared Error (RMSE): {rmse:,.2f}")
 print(f"R² Score: {r2:.2f}")
 
 # =========================================
-# 21. Feature Importance Analysis
+# 21. Feature Importance Analysis (Permutation Importance)
 # =========================================
-def get_feature_names(preprocessor, numerical_cols, categorical_cols):
-    output_features = []
+from sklearn.inspection import permutation_importance
 
-    for name, transformer, columns in preprocessor.transformers_:
+# Perform permutation importance
+print("\nCalculating permutation importances...")
+result = permutation_importance(
+    model_pipeline, X_test, y_test, n_repeats=10, random_state=42, n_jobs=-1
+)
+
+# Extract feature names using get_feature_names_out()
+try:
+    feature_names = model_pipeline.named_steps['preprocessor'].get_feature_names_out()
+except AttributeError:
+    # Fallback for older scikit-learn versions
+    feature_names = []
+    for name, transformer, columns in model_pipeline.named_steps['preprocessor'].transformers_:
         if name == 'num':
-            output_features.extend(columns)
+            feature_names.extend(columns)
         elif name == 'cat':
             onehot = transformer.named_steps['onehot']
             if hasattr(onehot, 'get_feature_names_out'):
                 cat_features = onehot.get_feature_names_out(columns)
             else:
                 cat_features = onehot.get_feature_names(columns)
-            output_features.extend(cat_features)
-    return output_features
+            feature_names.extend(cat_features)
 
-feature_names = get_feature_names(preprocessor, numerical_cols, categorical_cols)
+# Verify that the number of feature names matches the permutation importances
+if len(feature_names) != len(result.importances_mean):
+    print(f"Number of feature names ({len(feature_names)}) does not match number of permutation importances ({len(result.importances_mean)}).")
+    # Adjust feature_names to match the length by slicing if necessary
+    feature_names = feature_names[:len(result.importances_mean)]
+    feature_importances = pd.DataFrame({
+        'Feature': feature_names,
+        'Importance': result.importances_mean
+    })
+else:
+    # Create a DataFrame for feature importances
+    feature_importances = pd.DataFrame({
+        'Feature': feature_names,
+        'Importance': result.importances_mean
+    })
 
-if len(feature_names) != len(model_pipeline.named_steps['regressor'].feature_importances_):
-    raise ValueError("Mismatch between number of feature names and feature importances.")
-
-feature_importances = pd.DataFrame({
-    'Feature': feature_names,
-    'Importance': model_pipeline.named_steps['regressor'].feature_importances_
-})
-
+# Sort feature importances in descending order
 feature_importances = feature_importances.sort_values(by='Importance', ascending=False)
 
+# Select top N features
 top_n = 20
 top_features = feature_importances.head(top_n)
 
-print(f"\nTop {top_n} Feature Importances:")
+print(f"\nTop {top_n} Feature Importances (Permutation Importance):")
 print(top_features)
 
 # =========================================
-# 22. Visualize Feature Importances
+# 22. Visualize Feature Importances (Permutation Importance)
 # =========================================
 plt.figure(figsize=(10, 8))
 sns.barplot(x='Importance', y='Feature', data=top_features, palette='viridis')
-plt.title('Top 20 Feature Importances')
+plt.title('Top 20 Feature Importances (Permutation Importance)')
 plt.xlabel('Importance Score')
 plt.ylabel('Feature')
 plt.tight_layout()
@@ -369,7 +391,7 @@ print(final_test_df.head())
 # =========================================
 
 # Define the output CSV path in the same directory as the input CSV
-output_filename = 'final_test_predictions_xgboost.csv'
+output_filename = 'final_test_predictions_k_nearest_neighbors.csv'  # Updated filename
 output_path = os.path.join(os.path.dirname(input_path), output_filename)
 
 # Save the DataFrame to CSV
