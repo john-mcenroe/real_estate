@@ -231,12 +231,13 @@ print("Test set shape:", X_test.shape)
 model_pipeline = Pipeline(steps=[
     ('preprocessor', preprocessor),
     ('regressor', XGBRegressor(
-        n_estimators=100,
+        n_estimators=1000,  # Set a high number
         learning_rate=0.1,
         max_depth=6,
         random_state=42,
         n_jobs=-1,
-        objective='reg:squarederror'  # Specify the objective for regression
+        objective='reg:squarederror',
+        early_stopping_rounds=10  # Stop if no improvement after 10 rounds
     ))
 ])
 
@@ -244,7 +245,7 @@ model_pipeline = Pipeline(steps=[
 # 18. Train the Model
 # =========================================
 try:
-    model_pipeline.fit(X_train, y_train)
+    model_pipeline.fit(X_train, y_train, regressor__eval_set=[(X_test, y_test)])
     print("\nModel training completed.")
 except ValueError as e:
     print("\nError during model training:", e)
@@ -487,3 +488,84 @@ joblib.dump(model_pipeline, model_path)
 print(f"\nSaved trained model to {model_path}")
 
 # =========================================
+# 28. Hyperparameter Tuning
+# =========================================
+from sklearn.model_selection import RandomizedSearchCV
+
+# Define the parameter grid
+param_grid = {
+    'regressor__n_estimators': [100, 200, 300],
+    'regressor__max_depth': [3, 4, 5, 6, 7],
+    'regressor__learning_rate': [0.01, 0.1, 0.2],
+    'regressor__subsample': [0.8, 0.9, 1.0],
+    'regressor__colsample_bytree': [0.8, 0.9, 1.0],
+    'regressor__min_child_weight': [1, 3, 5]
+}
+
+# Create the RandomizedSearchCV object
+random_search = RandomizedSearchCV(model_pipeline, param_distributions=param_grid, 
+                                   n_iter=100, cv=5, scoring='neg_mean_squared_error', 
+                                   n_jobs=-1, random_state=42, verbose=1)
+
+# Fit the random search
+random_search.fit(X_train, y_train)
+
+# Get the best parameters and best score
+print("Best parameters:", random_search.best_params_)
+print("Best RMSE:", (-random_search.best_score_)**0.5)
+
+# Use the best estimator for predictions
+best_model = random_search.best_estimator_
+y_pred = best_model.predict(X_test)
+
+# =========================================
+# 29. Cross-validation
+# =========================================
+from sklearn.model_selection import cross_val_score
+
+# ... existing code ...
+
+cv_scores = cross_val_score(model_pipeline, X, y, cv=5, scoring='neg_mean_squared_error')
+rmse_scores = np.sqrt(-cv_scores)
+print("Cross-validation RMSE scores:", rmse_scores)
+print("Mean RMSE:", rmse_scores.mean())
+print("Standard deviation of RMSE:", rmse_scores.std())
+
+# =========================================
+# 30. Learning Curves
+# =========================================
+from sklearn.model_selection import learning_curve
+import matplotlib.pyplot as plt
+
+# ... existing code ...
+
+train_sizes, train_scores, test_scores = learning_curve(
+    model_pipeline, X, y, cv=5, scoring='neg_mean_squared_error',
+    train_sizes=np.linspace(0.1, 1.0, 10))
+
+train_scores_mean = -np.mean(train_scores, axis=1)
+test_scores_mean = -np.mean(test_scores, axis=1)
+
+plt.figure(figsize=(10, 6))
+plt.plot(train_sizes, train_scores_mean, label='Training error')
+plt.plot(train_sizes, test_scores_mean, label='Validation error')
+plt.xlabel('Training set size')
+plt.ylabel('Mean Squared Error')
+plt.title('Learning Curves')
+plt.legend()
+plt.show()
+
+# =========================================
+# Feature Selection
+# =========================================
+from sklearn.feature_selection import SelectFromModel
+
+# ... existing code ...
+
+# After fitting the model
+selector = SelectFromModel(model_pipeline.named_steps['regressor'], prefit=True)
+X_selected = selector.transform(X)
+print("Number of features selected:", X_selected.shape[1])
+
+# Retrain the model with selected features
+# ... (adjust your pipeline and retrain)
