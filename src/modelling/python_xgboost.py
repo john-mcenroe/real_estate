@@ -231,13 +231,12 @@ print("Test set shape:", X_test.shape)
 model_pipeline = Pipeline(steps=[
     ('preprocessor', preprocessor),
     ('regressor', XGBRegressor(
-        n_estimators=1000,  # Set a high number
+        n_estimators=100,
         learning_rate=0.1,
         max_depth=6,
         random_state=42,
         n_jobs=-1,
-        objective='reg:squarederror',
-        early_stopping_rounds=10  # Stop if no improvement after 10 rounds
+        objective='reg:squarederror'  # Specify the objective for regression
     ))
 ])
 
@@ -245,7 +244,7 @@ model_pipeline = Pipeline(steps=[
 # 18. Train the Model
 # =========================================
 try:
-    model_pipeline.fit(X_train, y_train, regressor__eval_set=[(X_test, y_test)])
+    model_pipeline.fit(X_train, y_train)
     print("\nModel training completed.")
 except ValueError as e:
     print("\nError during model training:", e)
@@ -564,8 +563,45 @@ from sklearn.feature_selection import SelectFromModel
 
 # After fitting the model
 selector = SelectFromModel(model_pipeline.named_steps['regressor'], prefit=True)
-X_selected = selector.transform(X)
+
+# Apply preprocessing to X
+X_preprocessed = model_pipeline.named_steps['preprocessor'].transform(X)
+
+# Now perform feature selection on the preprocessed data
+X_selected = selector.transform(X_preprocessed)
 print("Number of features selected:", X_selected.shape[1])
 
-# Retrain the model with selected features
-# ... (adjust your pipeline and retrain)
+# To use the selected features, you'll need to create a new pipeline:
+selected_features = selector.get_support()
+selected_feature_names = model_pipeline.named_steps['preprocessor'].get_feature_names_out()[selected_features]
+
+# Create a new preprocessor that only includes the selected features
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler
+
+new_preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', StandardScaler(), selected_feature_names)
+    ])
+
+# Create a new pipeline with the new preprocessor
+new_pipeline = Pipeline(steps=[
+    ('preprocessor', new_preprocessor),
+    ('regressor', XGBRegressor(
+        n_estimators=1000,
+        learning_rate=0.1,
+        max_depth=6,
+        random_state=42,
+        n_jobs=-1,
+        objective='reg:squarederror'
+    ))
+])
+
+# Fit the new pipeline
+new_pipeline.fit(X_train, y_train)
+
+# Make predictions
+y_pred = new_pipeline.predict(X_test)
+
+# Evaluate
+# ... (your evaluation code here)

@@ -1,6 +1,10 @@
 import joblib
 import pandas as pd
 import os
+import numpy as np
+from sklearn.model_selection import RandomizedSearchCV
+from sklearn.ensemble import VotingRegressor
+from xgboost import XGBRegressor
 
 # Load the trained model
 model_path = '/Users/johnmcenroe/Documents/programming_misc/real_estate/data/processed/scraped_dublin/added_metadata/xgboost_model.joblib'
@@ -20,6 +24,49 @@ def predict_sold_price(input_data):
     predicted_price = model_pipeline.predict(input_df)[0]
     
     return predicted_price
+
+def retrain_model(X, y):
+    """
+    Retrain the XGBoost model with hyperparameter tuning and ensemble methods.
+    
+    :param X: Feature DataFrame
+    :param y: Target Series
+    :return: Trained model pipeline
+    """
+    # Define XGBoost model
+    xgb = XGBRegressor(random_state=42)
+
+    # Define hyperparameter search space
+    param_dist = {
+        'n_estimators': [100, 500, 1000],
+        'max_depth': [3, 5, 7],
+        'learning_rate': [0.01, 0.1, 0.3],
+        'subsample': [0.6, 0.8, 1.0],
+        'colsample_bytree': [0.6, 0.8, 1.0],
+    }
+
+    # Perform randomized search
+    random_search = RandomizedSearchCV(xgb, param_distributions=param_dist, 
+                                       n_iter=20, cv=5, random_state=42, n_jobs=-1)
+    random_search.fit(X, y)
+
+    # Get best XGBoost model
+    best_xgb = random_search.best_estimator_
+
+    # Create an ensemble
+    ensemble = VotingRegressor([
+        ('xgb1', best_xgb),
+        ('xgb2', XGBRegressor(**random_search.best_params_, random_state=43)),
+        ('xgb3', XGBRegressor(**random_search.best_params_, random_state=44))
+    ])
+
+    # Fit the ensemble
+    ensemble.fit(X, y)
+
+    # Update the model pipeline with the new ensemble
+    model_pipeline.named_steps['regressor'] = ensemble
+
+    return model_pipeline
 
 # Get all required features
 required_features = model_pipeline.named_steps['preprocessor'].get_feature_names_out()
@@ -54,3 +101,13 @@ if __name__ == "__main__":
     
     predicted_price = predict_sold_price(interactive_input)
     print(f"\nPredicted Sold Price: €{predicted_price:,.2f}")
+
+    # Add option to retrain the model
+    retrain = input("Do you want to retrain the model? (y/n): ")
+    if retrain.lower() == 'y':
+        # Load your training data here
+        # X_train = ...
+        # y_train = ...
+        # model_pipeline = retrain_model(X_train, y_train)
+        # joblib.dump(model_pipeline, model_path)
+        print("Model retrained and saved.")
