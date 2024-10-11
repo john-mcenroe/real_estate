@@ -475,3 +475,15 @@ def predict_and_compare(sample_index=None, unique_id=None):
 predict_and_compare(sample_index=0)
 
 # =========================================
+# 27. Save the Trained Model
+# =========================================
+import joblib
+
+# Define the path to save the model
+model_path = os.path.join(os.path.dirname(input_path), 'xgboost_model.joblib')
+
+# Save the entire pipeline (including preprocessor and model)
+joblib.dump(model_pipeline, model_path)
+print(f"\nSaved trained model to {model_path}")
+
+# =========================================
