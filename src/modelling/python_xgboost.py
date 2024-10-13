@@ -487,56 +487,30 @@ joblib.dump(model_pipeline, model_path)
 print(f"\nSaved trained model to {model_path}")
 
 # =========================================
-# 28. Hyperparameter Tuning
+# 28. Simple Validation
 # =========================================
-from sklearn.model_selection import RandomizedSearchCV
+from sklearn.model_selection import train_test_split
 
-# Define the parameter grid
-param_grid = {
-    'regressor__n_estimators': [100, 200, 300],
-    'regressor__max_depth': [3, 4, 5, 6, 7],
-    'regressor__learning_rate': [0.01, 0.1, 0.2],
-    'regressor__subsample': [0.8, 0.9, 1.0],
-    'regressor__colsample_bytree': [0.8, 0.9, 1.0],
-    'regressor__min_child_weight': [1, 3, 5]
-}
+# Split the data into train and validation sets
+X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=42)
 
-# Create the RandomizedSearchCV object
-random_search = RandomizedSearchCV(model_pipeline, param_distributions=param_grid, 
-                                   n_iter=100, cv=5, scoring='neg_mean_squared_error', 
-                                   n_jobs=-1, random_state=42, verbose=1)
+# Train the model on the training set
+model_pipeline.fit(X_train, y_train)
 
-# Fit the random search
-random_search.fit(X_train, y_train)
+# Predict on the validation set
+y_val_pred = model_pipeline.predict(X_val)
 
-# Get the best parameters and best score
-print("Best parameters:", random_search.best_params_)
-print("Best RMSE:", (-random_search.best_score_)**0.5)
-
-# Use the best estimator for predictions
-best_model = random_search.best_estimator_
-y_pred = best_model.predict(X_test)
+# Calculate RMSE for the validation set
+val_rmse = np.sqrt(mean_squared_error(y_val, y_val_pred))
+print("Validation RMSE:", val_rmse)
 
 # =========================================
-# 29. Cross-validation
+# 29. Learning Curves (Optional)
 # =========================================
-from sklearn.model_selection import cross_val_score
-
-# ... existing code ...
-
-cv_scores = cross_val_score(model_pipeline, X, y, cv=5, scoring='neg_mean_squared_error')
-rmse_scores = np.sqrt(-cv_scores)
-print("Cross-validation RMSE scores:", rmse_scores)
-print("Mean RMSE:", rmse_scores.mean())
-print("Standard deviation of RMSE:", rmse_scores.std())
-
-# =========================================
-# 30. Learning Curves
-# =========================================
+# Remove this section entirely or comment it out if you want to keep it for future reference
+'''
 from sklearn.model_selection import learning_curve
 import matplotlib.pyplot as plt
-
-# ... existing code ...
 
 train_sizes, train_scores, test_scores = learning_curve(
     model_pipeline, X, y, cv=5, scoring='neg_mean_squared_error',
@@ -553,55 +527,6 @@ plt.ylabel('Mean Squared Error')
 plt.title('Learning Curves')
 plt.legend()
 plt.show()
+'''
 
-# =========================================
-# Feature Selection
-# =========================================
-from sklearn.feature_selection import SelectFromModel
-
-# ... existing code ...
-
-# After fitting the model
-selector = SelectFromModel(model_pipeline.named_steps['regressor'], prefit=True)
-
-# Apply preprocessing to X
-X_preprocessed = model_pipeline.named_steps['preprocessor'].transform(X)
-
-# Now perform feature selection on the preprocessed data
-X_selected = selector.transform(X_preprocessed)
-print("Number of features selected:", X_selected.shape[1])
-
-# To use the selected features, you'll need to create a new pipeline:
-selected_features = selector.get_support()
-selected_feature_names = model_pipeline.named_steps['preprocessor'].get_feature_names_out()[selected_features]
-
-# Create a new preprocessor that only includes the selected features
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import StandardScaler
-
-new_preprocessor = ColumnTransformer(
-    transformers=[
-        ('num', StandardScaler(), selected_feature_names)
-    ])
-
-# Create a new pipeline with the new preprocessor
-new_pipeline = Pipeline(steps=[
-    ('preprocessor', new_preprocessor),
-    ('regressor', XGBRegressor(
-        n_estimators=1000,
-        learning_rate=0.1,
-        max_depth=6,
-        random_state=42,
-        n_jobs=-1,
-        objective='reg:squarederror'
-    ))
-])
-
-# Fit the new pipeline
-new_pipeline.fit(X_train, y_train)
-
-# Make predictions
-y_pred = new_pipeline.predict(X_test)
-
-# Evaluate
-# ... (your evaluation code here)
+# End of script
