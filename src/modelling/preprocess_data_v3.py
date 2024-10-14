@@ -194,6 +194,21 @@ def get_ber_category(ber_rating):
     else:
         return 'Unknown'
 
+def get_size_category(size):
+    try:
+        size = float(size)
+    except (ValueError, TypeError):
+        logging.warning(f"Invalid size: {size}")
+        return "Unknown"
+    if size < 50:
+        return 'Small'
+    elif 50 <= size < 100:
+        return 'Medium'
+    elif 100 <= size < 150:
+        return 'Large'
+    else:
+        return 'Very Large'
+
 def calculate_distance(lat1, lon1, lat2, lon2):
     """
     Calculate the Haversine distance between two points in kilometers.
@@ -409,6 +424,7 @@ def generate_columns(data):
             'bathCategory': get_bath_category(preprocessed_data.get('baths', '0')),
             'propertyTypeCategory': get_property_type_category(preprocessed_data.get('property_type', '')),
             'berCategory': get_ber_category(preprocessed_data.get('energy_rating', '')),
+            'sizeCategory': get_size_category(preprocessed_data.get('myhome_floor_area_value', 0)),
             'originalInputs': {k: v for k, v in preprocessed_data.items() if k.lower() not in [
                 'asking_price', 'eircode', 'local_property_tax', 'url',
                 'myhome_link', 'price_per_square_meter',
@@ -556,33 +572,29 @@ def main():
         logging.debug("Python script started.")
         logging.debug(f"Current working directory: {os.getcwd()}")
 
-        # Define output file path
-        output_csv = '/Users/johnmcenroe/Documents/programming_misc/real_estate/data/processed/scraped_dublin/added_metadata/final_test_predictions_xgboost_v3.csv'  # Update this path as needed
+        # Define output file path for the full run
+        output_csv = '/Users/johnmcenroe/Documents/programming_misc/real_estate/data/processed/scraped_dublin/added_metadata/full_run_predictions_xgboost_v3.csv'
 
         # Start the data processing pipeline with test_run=False
         process_all_properties(output_csv, test_run=False)
 
-        # Optionally, perform a preview of the processed data
+        logging.info(f"Full data processing completed. Output saved to {output_csv}")
+
+        # Perform a preview of the processed data
         try:
             processed_df = pd.read_csv(output_csv)
-            logging.info("\nFinal DataFrame Preview:")
+            logging.info("\nFull Run DataFrame Preview:")
             print(processed_df.head())
-        except Exception as e:
-            logging.error(f"Failed to read the processed CSV file: {e}")
 
-        # Display column information
-        try:
+            # Display column information
             logging.info("\nColumn Information:")
             column_info = pd.DataFrame({
                 'Column Name': processed_df.columns,
                 'Data Type': processed_df.dtypes
             })
             print(column_info)
-        except Exception as e:
-            logging.error(f"Failed to retrieve column information: {e}")
 
-        # Display statistical summary
-        try:
+            # Display statistical summary
             logging.info("\nStatistical Summary:")
             numeric_cols = processed_df.select_dtypes(include=['number']).columns
             stats = processed_df[numeric_cols].agg(['mean', 'median', 'max', 'min', 'std']).transpose()
@@ -593,9 +605,10 @@ def main():
                 'min': 'Min',
                 'std': 'Std Dev'
             })
-            print(stats.head(30))
+            print(stats)
+
         except Exception as e:
-            logging.error(f"Failed to retrieve statistical summary: {e}")
+            logging.error(f"Failed to read or analyze the processed CSV file: {e}")
 
     except Exception as e:
         logging.error(f"Error in main execution: {str(e)}")
