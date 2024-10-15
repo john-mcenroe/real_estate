@@ -54,12 +54,11 @@ except Exception as e:
 
 def safe_divide(numerator, denominator):
     """
-    Safely divide two numbers, returning None if either is NaN or if division by zero occurs.
+    Safely divide two numbers, returning None if the division is not possible.
     """
     if pd.isna(numerator) or pd.isna(denominator) or denominator == 0:
         return None
-    else:
-        return numerator / denominator
+    return numerator / denominator
 
 def get_price_details(price_changes: str):
     """
@@ -282,20 +281,29 @@ def fetch_nearby_properties(latitude, longitude, radius_km):
 def calculate_nearby_metrics(nearby_properties, radius):
     metrics = {}
     
+    # Calculate average and median price per square meter
+    price_per_sqm = [float(prop['price_per_square_meter']) for prop in nearby_properties if prop.get('price_per_square_meter') and not pd.isna(prop['price_per_square_meter'])]
+    if price_per_sqm:
+        metrics[f'avg_price_per_sqm_within_{radius}km'] = np.nanmean(price_per_sqm)
+        metrics[f'median_price_per_sqm_within_{radius}km'] = np.nanmedian(price_per_sqm)
+    else:
+        metrics[f'avg_price_per_sqm_within_{radius}km'] = None
+        metrics[f'median_price_per_sqm_within_{radius}km'] = None
+    
     # Calculate average and median sold price
-    sold_prices = [float(prop['sale_price']) for prop in nearby_properties if prop.get('sale_price')]
+    sold_prices = [float(prop['sale_price']) for prop in nearby_properties if prop.get('sale_price') and not pd.isna(prop['sale_price'])]
     if sold_prices:
-        metrics[f'avg_sold_price_within_{radius}km'] = sum(sold_prices) / len(sold_prices)
-        metrics[f'median_sold_price_within_{radius}km'] = median(sold_prices)
+        metrics[f'avg_sold_price_within_{radius}km'] = np.nanmean(sold_prices)
+        metrics[f'median_sold_price_within_{radius}km'] = np.nanmedian(sold_prices)
     else:
         metrics[f'avg_sold_price_within_{radius}km'] = None
         metrics[f'median_sold_price_within_{radius}km'] = None
     
     # Calculate average and median asking price
-    asking_prices = [float(prop['asking_price']) for prop in nearby_properties if prop.get('asking_price')]
+    asking_prices = [float(prop['asking_price']) for prop in nearby_properties if prop.get('asking_price') and not pd.isna(prop['asking_price'])]
     if asking_prices:
-        metrics[f'avg_asking_price_within_{radius}km'] = sum(asking_prices) / len(asking_prices)
-        metrics[f'median_asking_price_within_{radius}km'] = median(asking_prices)
+        metrics[f'avg_asking_price_within_{radius}km'] = np.nanmean(asking_prices)
+        metrics[f'median_asking_price_within_{radius}km'] = np.nanmedian(asking_prices)
     else:
         metrics[f'avg_asking_price_within_{radius}km'] = None
         metrics[f'median_asking_price_within_{radius}km'] = None
@@ -303,25 +311,16 @@ def calculate_nearby_metrics(nearby_properties, radius):
     # Calculate average and median delta between asking and sold prices
     deltas = [float(prop['sale_price']) - float(prop['asking_price']) 
               for prop in nearby_properties 
-              if prop.get('sale_price') and prop.get('asking_price')]
+              if prop.get('sale_price') and prop.get('asking_price') and not pd.isna(prop['sale_price']) and not pd.isna(prop['asking_price'])]
     if deltas:
-        metrics[f'avg_price_delta_within_{radius}km'] = sum(deltas) / len(deltas)
-        metrics[f'median_price_delta_within_{radius}km'] = median(deltas)
+        metrics[f'avg_price_delta_within_{radius}km'] = np.nanmean(deltas)
+        metrics[f'median_price_delta_within_{radius}km'] = np.nanmedian(deltas)
     else:
         metrics[f'avg_price_delta_within_{radius}km'] = None
         metrics[f'median_price_delta_within_{radius}km'] = None
     
-    # Calculate average and median price per square meter
-    price_per_sqm = [float(prop['price_per_square_meter']) for prop in nearby_properties if prop.get('price_per_square_meter')]
-    if price_per_sqm:
-        metrics[f'avg_price_per_sqm_within_{radius}km'] = sum(price_per_sqm) / len(price_per_sqm)
-        metrics[f'median_price_per_sqm_within_{radius}km'] = median(price_per_sqm)
-    else:
-        metrics[f'avg_price_per_sqm_within_{radius}km'] = None
-        metrics[f'median_price_per_sqm_within_{radius}km'] = None
-    
     # Calculate most common BER rating
-    ber_ratings = [prop['energy_rating'] for prop in nearby_properties if prop.get('energy_rating')]
+    ber_ratings = [prop['energy_rating'] for prop in nearby_properties if prop.get('energy_rating') and not pd.isna(prop['energy_rating'])]
     if ber_ratings:
         try:
             metrics[f'most_common_ber_rating_within_{radius}km'] = mode(ber_ratings)
@@ -331,7 +330,7 @@ def calculate_nearby_metrics(nearby_properties, radius):
         metrics[f'most_common_ber_rating_within_{radius}km'] = None
     
     # Calculate property type distribution
-    property_types = [prop['property_type'] for prop in nearby_properties if prop.get('property_type')]
+    property_types = [prop['property_type'] for prop in nearby_properties if prop.get('property_type') and not pd.isna(prop['property_type'])]
     if property_types:
         type_distribution = {t: property_types.count(t) / len(property_types) * 100 for t in set(property_types)}
         metrics[f'property_type_distribution_within_{radius}km'] = type_distribution
@@ -339,14 +338,14 @@ def calculate_nearby_metrics(nearby_properties, radius):
         metrics[f'property_type_distribution_within_{radius}km'] = {}
     
     # Calculate average number of bedrooms and bathrooms
-    beds = [int(prop['beds']) for prop in nearby_properties if prop.get('beds') and str(prop['beds']).isdigit()]
-    baths = [int(prop['baths']) for prop in nearby_properties if prop.get('baths') and str(prop['baths']).isdigit()]
+    beds = [int(prop['beds']) for prop in nearby_properties if prop.get('beds') and str(prop['beds']).isdigit() and not pd.isna(prop['beds'])]
+    baths = [int(prop['baths']) for prop in nearby_properties if prop.get('baths') and str(prop['baths']).isdigit() and not pd.isna(prop['baths'])]
     if beds:
-        metrics[f'avg_bedrooms_within_{radius}km'] = sum(beds) / len(beds)
+        metrics[f'avg_bedrooms_within_{radius}km'] = np.nanmean(beds)
     else:
         metrics[f'avg_bedrooms_within_{radius}km'] = None
     if baths:
-        metrics[f'avg_bathrooms_within_{radius}km'] = sum(baths) / len(baths)
+        metrics[f'avg_bathrooms_within_{radius}km'] = np.nanmean(baths)
     else:
         metrics[f'avg_bathrooms_within_{radius}km'] = None
     
@@ -369,10 +368,11 @@ def preprocess_property_data(prop):
     """
     try:
         # Convert numeric fields
-        numeric_fields = ['asking_price', 'local_property_tax', 'myhome_asking_price', 'myhome_floor_area_value', 'latitude', 'longitude']
+        numeric_fields = ['sale_price', 'myhome_floor_area_value', 'latitude', 'longitude']
         for field in numeric_fields:
             if field in prop:
                 prop[field] = pd.to_numeric(prop[field], errors='coerce')
+                logging.debug(f"Converted {field}: {prop[field]} (Type: {type(prop[field])})")
 
         # Handle beds and baths
         if 'beds' in prop:
@@ -395,16 +395,13 @@ def preprocess_property_data(prop):
         if 'energy_rating' in prop:
             prop['energy_rating_numeric'] = ber_to_numeric(prop['energy_rating'])
 
-        # Calculate price per square meter
-        if 'myhome_asking_price' in prop and 'myhome_floor_area_value' in prop:
-            prop['price_per_square_meter'] = safe_divide(prop['myhome_asking_price'], prop['myhome_floor_area_value'])
-
-        # Handle missing 'First List Date'
-        if 'first_list_date' in prop and pd.isna(prop['first_list_date']):
-            if 'sold_date' in prop and pd.notna(prop['sold_date']):
-                prop['first_list_date'] = prop['sold_date'] - timedelta(days=30)
-            else:
-                prop['first_list_date'] = datetime.now() - timedelta(days=30)
+        # Calculate price per square meter using sale price
+        if pd.notna(prop['sale_price']) and pd.notna(prop['myhome_floor_area_value']) and prop['myhome_floor_area_value'] > 0:
+            prop['price_per_square_meter'] = safe_divide(prop['sale_price'], prop['myhome_floor_area_value'])
+            logging.debug(f"Price per square meter calculated: {prop['price_per_square_meter']}")
+        else:
+            prop['price_per_square_meter'] = None
+            logging.debug("Price per square meter set to None due to missing or invalid data.")
 
         return prop
     except Exception as e:
@@ -567,23 +564,26 @@ def process_all_properties(output_csv_path, test_run=False):
 # Step 4: Main Execution
 # ======================================
 
-def main():
+def main(test_run=False):
     try:
         logging.debug("Python script started.")
         logging.debug(f"Current working directory: {os.getcwd()}")
 
-        # Define output file path for the full run
-        output_csv = '/Users/johnmcenroe/Documents/programming_misc/real_estate/data/processed/scraped_dublin/added_metadata/full_run_predictions_xgboost_v3.csv'
+        # Define output file path for the full run or test run
+        if test_run:
+            output_csv = '/Users/johnmcenroe/Documents/programming_misc/real_estate/data/processed/scraped_dublin/added_metadata/test_run_predictions_xgboost_v3.csv'
+        else:
+            output_csv = '/Users/johnmcenroe/Documents/programming_misc/real_estate/data/processed/scraped_dublin/added_metadata/full_run_predictions_xgboost_v3.csv'
 
-        # Start the data processing pipeline with test_run=False
-        process_all_properties(output_csv, test_run=False)
+        # Start the data processing pipeline
+        process_all_properties(output_csv, test_run=test_run)
 
-        logging.info(f"Full data processing completed. Output saved to {output_csv}")
+        logging.info(f"Data processing completed. Output saved to {output_csv}")
 
         # Perform a preview of the processed data
         try:
             processed_df = pd.read_csv(output_csv)
-            logging.info("\nFull Run DataFrame Preview:")
+            logging.info("\nDataFrame Preview:")
             print(processed_df.head())
 
             # Display column information
@@ -617,4 +617,5 @@ def main():
         sys.exit(1)
 
 if __name__ == "__main__":
-    main()
+    # Set test_run to True for testing, False for full execution
+    main(test_run=True)
