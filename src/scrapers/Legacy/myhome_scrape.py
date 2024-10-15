@@ -85,7 +85,7 @@ def parse_listing(url):
     return data
 
 # Example usage
-url = "https://www.myhome.ie/residential/brochure/taramar-middle-third-killester-dublin-5/4786863"
+url = "https://www.myhome.ie/residential/brochure/endsleigh-8-newtownpark-avenue-blackrock-county-dublin/4832059"
 listing_data = parse_listing(url)
 
 # Output the listing data

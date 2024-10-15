@@ -144,30 +144,35 @@ def get_property_type_category(property_type):
     else:
         return 'Other'
 
+def extract_numeric(value):
+    """
+    Extract numeric value from a string.
+    """
+    if pd.isna(value):
+        return np.nan
+    match = re.search(r'\d+', str(value))
+    return int(match.group()) if match else np.nan
+
 def get_bed_category(beds):
-    try:
-        beds = int(float(beds))
-    except (ValueError, TypeError):
-        logging.warning(f"Invalid bed count: {beds}")
+    bed_count = extract_numeric(beds)
+    if pd.isna(bed_count):
         return "Unknown"
-    if beds <= 1:
+    if bed_count <= 1:
         return "Studio/1 Bed"
-    elif beds == 2:
+    elif bed_count == 2:
         return "2 Bed"
-    elif beds == 3:
+    elif bed_count == 3:
         return "3 Bed"
     else:
         return "4+ Bed"
 
 def get_bath_category(baths):
-    try:
-        baths = int(float(baths))
-    except (ValueError, TypeError):
-        logging.warning(f"Invalid bath count: {baths}")
+    bath_count = extract_numeric(baths)
+    if pd.isna(bath_count):
         return "Unknown"
-    if baths <= 1:
+    if bath_count <= 1:
         return "1 Bath"
-    elif baths == 2:
+    elif bath_count == 2:
         return "2 Bath"
     else:
         return "3+ Bath"
@@ -265,7 +270,9 @@ def fetch_nearby_properties(latitude, longitude, radius_km):
                     prop_lon = float(prop_lon)
                     distance = calculate_distance(latitude, longitude, prop_lat, prop_lon)
                     if distance is not None and distance <= radius_km:
-                        nearby_properties.append(prop)
+                        # Preprocess the property before adding it to nearby_properties
+                        preprocessed_prop = preprocess_property_data(prop)
+                        nearby_properties.append(preprocessed_prop)
                 except ValueError:
                     logging.warning(f"Invalid coordinates for property: {prop.get('id')}")
             else:
@@ -282,13 +289,40 @@ def calculate_nearby_metrics(nearby_properties, radius):
     metrics = {}
     
     # Calculate average and median price per square meter
-    price_per_sqm = [float(prop['price_per_square_meter']) for prop in nearby_properties if prop.get('price_per_square_meter') and not pd.isna(prop['price_per_square_meter'])]
+    price_per_sqm = [
+        prop['price_per_square_meter'] 
+        for prop in nearby_properties 
+        if 'price_per_square_meter' in prop and pd.notna(prop['price_per_square_meter'])
+    ]
+    
+    logging.debug(f"Number of properties with valid price_per_square_meter within {radius}km: {len(price_per_sqm)}")
+    logging.debug(f"Sample of price_per_sqm values: {price_per_sqm[:5]}")
+
     if price_per_sqm:
         metrics[f'avg_price_per_sqm_within_{radius}km'] = np.nanmean(price_per_sqm)
         metrics[f'median_price_per_sqm_within_{radius}km'] = np.nanmedian(price_per_sqm)
+        logging.debug(f"Calculated avg_price_per_sqm_within_{radius}km: {metrics[f'avg_price_per_sqm_within_{radius}km']}")
     else:
         metrics[f'avg_price_per_sqm_within_{radius}km'] = None
         metrics[f'median_price_per_sqm_within_{radius}km'] = None
+        logging.warning(f"No valid price_per_square_meter values found for {radius}km radius")
+
+    # Calculate other metrics (e.g., avg_asking_price) for comparison
+    asking_prices = [
+        float(prop['asking_price']) 
+        for prop in nearby_properties 
+        if prop.get('asking_price') and pd.notna(prop['asking_price'])
+    ]
+    
+    if asking_prices:
+        metrics[f'avg_asking_price_within_{radius}km'] = np.nanmean(asking_prices)
+        metrics[f'median_asking_price_within_{radius}km'] = np.nanmedian(asking_prices)
+        logging.debug(f"Calculated avg_asking_price_within_{radius}km: {metrics[f'avg_asking_price_within_{radius}km']}")
+        logging.debug(f"Number of properties used for asking_price calculation: {len(asking_prices)}")
+    else:
+        metrics[f'avg_asking_price_within_{radius}km'] = None
+        metrics[f'median_asking_price_within_{radius}km'] = None
+        logging.warning(f"No valid asking_price values found for {radius}km radius")
     
     # Calculate average and median sold price
     sold_prices = [float(prop['sale_price']) for prop in nearby_properties if prop.get('sale_price') and not pd.isna(prop['sale_price'])]
@@ -298,15 +332,6 @@ def calculate_nearby_metrics(nearby_properties, radius):
     else:
         metrics[f'avg_sold_price_within_{radius}km'] = None
         metrics[f'median_sold_price_within_{radius}km'] = None
-    
-    # Calculate average and median asking price
-    asking_prices = [float(prop['asking_price']) for prop in nearby_properties if prop.get('asking_price') and not pd.isna(prop['asking_price'])]
-    if asking_prices:
-        metrics[f'avg_asking_price_within_{radius}km'] = np.nanmean(asking_prices)
-        metrics[f'median_asking_price_within_{radius}km'] = np.nanmedian(asking_prices)
-    else:
-        metrics[f'avg_asking_price_within_{radius}km'] = None
-        metrics[f'median_asking_price_within_{radius}km'] = None
     
     # Calculate average and median delta between asking and sold prices
     deltas = [float(prop['sale_price']) - float(prop['asking_price']) 
@@ -337,75 +362,57 @@ def calculate_nearby_metrics(nearby_properties, radius):
     else:
         metrics[f'property_type_distribution_within_{radius}km'] = {}
     
-    # Calculate average number of bedrooms and bathrooms
-    beds = [int(prop['beds']) for prop in nearby_properties if prop.get('beds') and str(prop['beds']).isdigit() and not pd.isna(prop['beds'])]
-    baths = [int(prop['baths']) for prop in nearby_properties if prop.get('baths') and str(prop['baths']).isdigit() and not pd.isna(prop['baths'])]
+    beds = [prop['beds'] for prop in nearby_properties if pd.notna(prop['beds'])]
+    baths = [prop['baths'] for prop in nearby_properties if pd.notna(prop['baths'])]
+
+    logging.info(f"Number of properties with valid 'beds' within {radius}km: {len(beds)}")
+    logging.info(f"Number of properties with valid 'baths' within {radius}km: {len(baths)}")
+    logging.debug(f"Sample of 'beds' values: {beds[:5]}")
+    logging.debug(f"Sample of 'baths' values: {baths[:5]}")
+
     if beds:
-        metrics[f'avg_bedrooms_within_{radius}km'] = np.nanmean(beds)
+        metrics[f'avg_bedrooms_within_{radius}km'] = np.mean(beds)
+        logging.info(f"Calculated avg_bedrooms_within_{radius}km: {metrics[f'avg_bedrooms_within_{radius}km']}")
     else:
         metrics[f'avg_bedrooms_within_{radius}km'] = None
+        logging.warning(f"No valid 'beds' values found for {radius}km radius")
+
     if baths:
-        metrics[f'avg_bathrooms_within_{radius}km'] = np.nanmean(baths)
+        metrics[f'avg_bathrooms_within_{radius}km'] = np.mean(baths)
+        logging.info(f"Calculated avg_bathrooms_within_{radius}km: {metrics[f'avg_bathrooms_within_{radius}km']}")
     else:
         metrics[f'avg_bathrooms_within_{radius}km'] = None
+        logging.warning(f"No valid 'baths' values found for {radius}km radius")
     
     metrics[f'nearby_properties_count_within_{radius}km'] = len(nearby_properties)
     
     return metrics
 
-def extract_numeric(value):
-    """
-    Extract numeric value from a string.
-    """
-    if pd.isna(value):
-        return np.nan
-    match = re.search(r'\d+', str(value))
-    return int(match.group()) if match else np.nan
-
 def preprocess_property_data(prop):
-    """
-    Preprocess a single property's data by converting columns to appropriate data types and handling missing values.
-    """
     try:
         # Convert numeric fields
-        numeric_fields = ['sale_price', 'myhome_floor_area_value', 'latitude', 'longitude']
+        numeric_fields = ['sale_price', 'myhome_floor_area_value', 'latitude', 'longitude', 'asking_price']
         for field in numeric_fields:
             if field in prop:
                 prop[field] = pd.to_numeric(prop[field], errors='coerce')
-                logging.debug(f"Converted {field}: {prop[field]} (Type: {type(prop[field])})")
-
-        # Handle beds and baths
-        if 'beds' in prop:
-            prop['beds'] = extract_numeric(prop['beds'])
-        if 'baths' in prop:
-            prop['baths'] = extract_numeric(prop['baths'])
-
-        # Convert date fields
-        date_fields = ['sold_date', 'first_list_date']
-        for field in date_fields:
-            if field in prop:
-                prop[field] = pd.to_datetime(prop[field], format="%a %b %d %Y", errors='coerce')
-
-        # Handle 'Price Changes' field
-        if 'price_changes' in prop:
-            price_details = get_price_details(prop['price_changes'])
-            prop['sold_asking_price'], prop['sold_price'], prop['sold_date'], prop['first_list_date'] = price_details
-
-        # Convert 'Energy Rating' to numeric
-        if 'energy_rating' in prop:
-            prop['energy_rating_numeric'] = ber_to_numeric(prop['energy_rating'])
+        
+        # Extract numeric values for beds and baths
+        prop['beds'] = extract_numeric(prop.get('beds'))
+        prop['baths'] = extract_numeric(prop.get('baths'))
+        
+        logging.debug(f"Property ID: {prop.get('id')}, Beds: {prop.get('beds')}, Baths: {prop.get('baths')}")
 
         # Calculate price per square meter using sale price
         if pd.notna(prop['sale_price']) and pd.notna(prop['myhome_floor_area_value']) and prop['myhome_floor_area_value'] > 0:
-            prop['price_per_square_meter'] = safe_divide(prop['sale_price'], prop['myhome_floor_area_value'])
-            logging.debug(f"Price per square meter calculated: {prop['price_per_square_meter']}")
+            prop['price_per_square_meter'] = prop['sale_price'] / prop['myhome_floor_area_value']
+            logging.debug(f"Calculated price_per_square_meter: {prop['price_per_square_meter']}")
         else:
             prop['price_per_square_meter'] = None
-            logging.debug("Price per square meter set to None due to missing or invalid data.")
+            logging.debug(f"Unable to calculate price_per_square_meter. sale_price: {prop.get('sale_price')}, myhome_floor_area_value: {prop.get('myhome_floor_area_value')}")
 
         return prop
     except Exception as e:
-        logging.error(f"Error in preprocess_property_data: {e}")
+        logging.error(f"Error in preprocess_property_data for property ID {prop.get('id')}: {e}")
         return prop
 
 def generate_columns(data):
@@ -442,22 +449,17 @@ def generate_columns(data):
                     result[f'nearby_properties_count_within_{radius}km'] = len(nearby_props)
                     if nearby_props:
                         nearby_metrics = calculate_nearby_metrics(nearby_props, radius)
-                        result.update(nearby_metrics)
+                        for key, value in nearby_metrics.items():
+                            if value is not None:
+                                result[key] = value
+                            else:
+                                logging.warning(f"Metric {key} is None for radius {radius}km")
+                                result[key] = None
                     else:
                         logging.warning(f"No nearby properties found within {radius}km to calculate metrics.")
-                        # Initialize metrics with None or default values if no properties found
-                        result[f'avg_sold_price_within_{radius}km'] = None
-                        result[f'median_sold_price_within_{radius}km'] = None
-                        result[f'avg_asking_price_within_{radius}km'] = None
-                        result[f'median_asking_price_within_{radius}km'] = None
-                        result[f'avg_price_delta_within_{radius}km'] = None
-                        result[f'median_price_delta_within_{radius}km'] = None
-                        result[f'avg_price_per_sqm_within_{radius}km'] = None
-                        result[f'median_price_per_sqm_within_{radius}km'] = None
-                        result[f'most_common_ber_rating_within_{radius}km'] = None
-                        result[f'property_type_distribution_within_{radius}km'] = {}
                         result[f'avg_bedrooms_within_{radius}km'] = None
                         result[f'avg_bathrooms_within_{radius}km'] = None
+                        # ... initialize other metrics ...
             except ValueError:
                 logging.error(f"Invalid latitude or longitude: {result['latitude']}, {result['longitude']}")
                 for radius in [1, 3, 5]:
@@ -494,7 +496,7 @@ def generate_columns(data):
         logging.info("Finished generate_columns function.")
         return result
     except Exception as e:
-        logging.error(f"Error in generate_columns: {str(e)}")
+        logging.error(f"Error in generate_columns for property ID {data.get('id')}: {str(e)}")
         logging.error(traceback.format_exc())
         raise
 
@@ -502,13 +504,12 @@ def generate_columns(data):
 # Step 3: Data Processing Pipeline
 # ======================================
 
-def process_all_properties(output_csv_path, test_run=False):
+def process_all_properties(output_csv_path):
     """
     Fetch all properties from Supabase, generate metrics for each, and save to a CSV file.
     
     Args:
         output_csv_path (str): Path to save the processed CSV file.
-        test_run (bool): If True, process only 10 rows for testing.
     """
     try:
         logging.info("Starting data processing pipeline.")
@@ -522,11 +523,6 @@ def process_all_properties(output_csv_path, test_run=False):
         if not all_properties:
             logging.warning("No properties fetched from Supabase. Exiting pipeline.")
             return
-
-        # Limit to 10 rows if it's a test run
-        if test_run:
-            all_properties = all_properties[:10]
-            logging.info(f"Test run: Processing {len(all_properties)} properties.")
 
         # Initialize a list to store processed property data
         processed_data = []
@@ -564,19 +560,16 @@ def process_all_properties(output_csv_path, test_run=False):
 # Step 4: Main Execution
 # ======================================
 
-def main(test_run=False):
+def main():
     try:
         logging.debug("Python script started.")
         logging.debug(f"Current working directory: {os.getcwd()}")
 
-        # Define output file path for the full run or test run
-        if test_run:
-            output_csv = '/Users/johnmcenroe/Documents/programming_misc/real_estate/data/processed/scraped_dublin/added_metadata/test_run_predictions_xgboost_v3.csv'
-        else:
-            output_csv = '/Users/johnmcenroe/Documents/programming_misc/real_estate/data/processed/scraped_dublin/added_metadata/full_run_predictions_xgboost_v3.csv'
+        # Define output file path for the full production run
+        output_csv = '/Users/johnmcenroe/Documents/programming_misc/real_estate/data/processed/scraped_dublin/added_metadata/full_run_predictions_xgboost_v3.csv'
 
         # Start the data processing pipeline
-        process_all_properties(output_csv, test_run=test_run)
+        process_all_properties(output_csv)
 
         logging.info(f"Data processing completed. Output saved to {output_csv}")
 
@@ -617,5 +610,4 @@ def main(test_run=False):
         sys.exit(1)
 
 if __name__ == "__main__":
-    # Set test_run to True for testing, False for full execution
-    main(test_run=True)
+    main()

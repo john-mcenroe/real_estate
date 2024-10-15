@@ -133,5 +133,5 @@ def scrape_property(url):
 
 # Example usage
 if __name__ == "__main__":
-    url = "https://www.myhome.ie/residential/brochure/12-greenville-court-stradbrook-road-blackrock-co-dublin/4749817"
+    url = "https://www.myhome.ie/residential/brochure/endsleigh-8-newtownpark-avenue-blackrock-county-dublin/4832059"
     scrape_property(url)
