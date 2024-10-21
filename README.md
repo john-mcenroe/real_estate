@@ -1,93 +1,133 @@
-# Real Estate Data Collection and Enrichment
+# Real Estate Data Analysis and Prediction
 
-This project automates the collection and enrichment of real estate data, focusing on properties in Dublin, Ireland. It uses web scraping to gather property information and enrich it with additional metadata from external sources like MyHome.ie and Google Maps.
-
-## Table of Contents
-
-- [Directory Structure](#directory-structure)
-- [Main Scripts](#main-scripts)
-- [Other Noteworthy Scripts](#other-noteworthy-scripts)
-- [Dependencies](#dependencies)
-- [Usage](#usage)
-- [Logging and Debugging](#logging-and-debugging)
-- [Future Improvements](#future-improvements)
+This project focuses on collecting, processing, and analyzing real estate data, as well as building predictive models for property prices.
 
 ## Directory Structure
 
 ```
-.
+REAL_ESTATE/
 ├── data/
-│   ├── raw/         # Raw data scraped from real estate websites
-│   └── processed/   # Data enriched and processed for analysis
-├── logs/            # Logs of scraping activities and errors
-├── notebooks/       # Jupyter notebooks for data exploration and analysis
+│   └── processed/  # Contains processed data files
+├── env/            # Virtual environment (not tracked in git)
+├── logs/           # Log files
+├── notebooks/      # Jupyter notebooks for analysis and experimentation
 ├── src/
-│   ├── scrapers/    # Scripts for web scraping
-│   └── utils/       # Utility functions for file and data processing
-└── tests/           # Test scripts for scrapers and utilities
+│   ├── db_update/  # Scripts for database updates
+│   ├── modelling/  # Scripts for data processing and model building
+│   ├── scrapers/   # Web scraping scripts
+│   └── utils/      # Utility functions
+├── .gitignore
+├── package-lock.json
+├── package.json
+└── README.md
 ```
 
-## Main Scripts
+## Components
 
-### 1. find_my_home.py
+### 1. Scrapers (`src/scrapers/`)
 
-**Purpose**: Enriches property metadata by searching for listings on MyHome.ie.
+- Purpose: Collect property price data from various sources.
+- Features:
+  - Configurable to continuously grab and dedupe data.
+  - Automation of scraping process (to be implemented).
+- Usage:
+  ```
+  python src/scrapers/main_scraper.py
+  ```
 
-**Key Features**:
-- Performs Google searches to find relevant MyHome.ie URLs
-- Scrapes MyHome.ie for detailed property data (address, asking price, floor area, BER rating, etc.)
-- Optionally enriches data with latitude and longitude using the Google Maps API
+### 2. Modelling (`src/modelling/`)
 
-### 2. my_home_scrape.py
+- Purpose: Process data and fit XGBoost model for property price prediction.
+- Features:
+  - Data preprocessing and feature engineering.
+  - XGBoost model training and evaluation.
+  - Produces a joblib model file for use in the application.
+- Usage:
+  ```
+  python src/modelling/train_model.py
+  ```
 
-**Purpose**: Scrapes property data from the Dublin Price Register on Mynest.ie.
+### 3. DB Update (`src/db_update/`)
 
-**Key Features**:
-- Scrapes property data from multiple pages
-- Captures unique addresses and associated URLs
-- Stores data in a CSV file for further enrichment and analysis
+- Purpose: Push collected and processed data to Supabase.
+- Features:
+  - Defines table structure for the database.
+  - Handles data insertion and updates.
+- Usage:
+  ```
+  python src/db_update/update_supabase.py
+  ```
 
-## Other Noteworthy Scripts
+### 4. Data Folder (`data/`)
 
-- **my_home_metadata_enrichment.py**: Enriches property data with metadata such as floor area, BER details, and pricing by scraping MyHome.ie.
-- **pagination_test_script.py**: Utility script for testing pagination functionality on websites.
-- **image_comparison_metrics.py**: Processes and compares real estate images using various metrics.
+- Contains output data at different stages of processing:
+  - `data/raw/`: Raw scraped data (if applicable)
+  - `data/processed/`: Cleaned and preprocessed data ready for analysis or modeling
 
-## Dependencies
+### 5. Jupyter Notebooks (`notebooks/`)
 
-### Python Libraries:
-- selenium: Browser automation and web scraping
-- webdriver_manager: Automatic management of browser drivers
-- requests: Making HTTP requests (e.g., to Google Maps API)
-- csv: Reading and writing CSV files
+- A suite of Jupyter notebooks for exploratory data analysis and rough experimentation.
+- These notebooks provide interactive environments for:
+  - Data visualization
+  - Feature exploration
+  - Model prototyping
+  - Ad-hoc analysis tasks
+- To use:
+  ```
+  jupyter notebook notebooks/
+  ```
 
-### External Services:
-- Google Maps API: Fetching latitude and longitude data for property addresses
-- MyHome.ie: Enriching property metadata with detailed information
+## Getting Started
 
-## Usage
-
-1. **Enrich Metadata for Scraped Properties**:
-   ```bash
-   python src/scrapers/find_my_home.py
+1. Clone the repository:
    ```
-   This will search for properties on MyHome.ie and enrich your existing dataset with additional details.
-
-2. **Scrape Dublin Price Register**:
-   ```bash
-   python src/scrapers/my_home_scrape.py
+   git clone https://github.com/yourusername/real-estate-project.git
    ```
-   This will scrape the Dublin Price Register, gathering property sale data and saving it to a CSV file.
 
-3. **Analyze Data in Jupyter Notebooks**: 
-   Open any of the Jupyter notebooks in the `notebooks/` directory to explore and visualize the scraped data.
+2. Set up a virtual environment:
+   ```
+   python -m venv env
+   source env/bin/activate  # On Windows, use `env\Scripts\activate`
+   ```
 
-## Logging and Debugging
+3. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
 
-All scraping logs are stored in the `logs/` directory. Logs include detailed messages and any errors encountered during the scraping process, facilitating easier debugging.
+4. Configure environment variables:
+   - Create a `.env` file in the project root and add necessary API keys and database credentials.
+
+5. Run the scraper to collect data:
+   ```
+   python src/scrapers/main_scraper.py
+   ```
+
+6. Process data and train the model:
+   ```
+   python src/modelling/train_model.py
+   ```
+
+7. Update the database with new data:
+   ```
+   python src/db_update/update_supabase.py
+   ```
+
+8. Explore the data and experiment using Jupyter notebooks:
+   ```
+   jupyter notebook notebooks/
+   ```
 
 ## Future Improvements
 
-- Add scraping capabilities for additional regions or other real estate websites
-- Automate the entire pipeline using a task scheduler (e.g., cron) for continuous data collection and enrichment
-- Implement data visualization tools for better insights into the Dublin real estate market
+- Implement automated scheduling for regular data scraping.
+- Develop a web interface for easy interaction with the model and data.
+- Expand the model to include more features and improve prediction accuracy.
+
+## Contributing
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
