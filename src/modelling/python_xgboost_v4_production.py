@@ -3,6 +3,7 @@ import numpy as np
 import os
 import warnings
 import joblib
+from datetime import datetime
 
 # For preprocessing and model training
 from sklearn.model_selection import train_test_split
@@ -27,6 +28,10 @@ import seaborn as sns
 import sklearn
 from packaging import version
 
+# For hyperparameter tuning and cross-validation
+from sklearn.model_selection import cross_val_score, RandomizedSearchCV
+from scipy.stats import uniform, randint
+
 # Suppress warnings for cleaner output
 warnings.filterwarnings('ignore')
 
@@ -42,8 +47,8 @@ print(f"scikit-learn version: {sklearn_version}")
 # 1. Load the Data
 # =========================================
 
-# Define the input CSV path
-input_path = '/Users/johnmcenroe/Documents/programming_misc/real_estate/data/processed/scraped_dublin/added_metadata/full_run_predictions_xgboost_v3.csv'
+# Update the input file path
+input_path = '/Users/johnmcenroe/Documents/programming_misc/real_estate/data/processed/scraped_dublin/added_metadata/processed_data_v3_output.csv'
 
 # Check if file exists and its size
 if not os.path.exists(input_path):
@@ -70,30 +75,66 @@ print(df.info())
 # 3. Define Target and Features
 # =========================================
 
-# Define target and features as per Script #2
+# Define target
 target = 'sale_price'
+
+# Explicitly define features
 features = [
-    'beds', 'baths', 'myhome_floor_area_value', 'latitude', 'longitude',
-    'energy_rating_numeric', 'bedCategory', 'bathCategory', 'propertyTypeCategory', 'berCategory', 'sizeCategory',
-    'nearby_properties_count_within_1km',
-    'avg_sold_price_within_1km', 'median_sold_price_within_1km',
-    'avg_asking_price_within_1km', 'median_asking_price_within_1km',
-    'avg_price_delta_within_1km', 'median_price_delta_within_1km',
-    'avg_price_per_sqm_within_1km', 'median_price_per_sqm_within_1km',
-    'avg_bedrooms_within_1km', 'avg_bathrooms_within_1km',
-    'nearby_properties_count_within_3km',
-    'avg_sold_price_within_3km', 'median_sold_price_within_3km',
-    'avg_asking_price_within_3km', 'median_asking_price_within_3km',
-    'avg_price_delta_within_3km', 'median_price_delta_within_3km',
-    'avg_price_per_sqm_within_3km', 'median_price_per_sqm_within_3km',
-    'avg_bedrooms_within_3km', 'avg_bathrooms_within_3km',
+    'beds', 'baths', 'property_type', 'energy_rating',
+    'myhome_floor_area_value', 'latitude', 'longitude',
+    'bedCategory', 'bathCategory', 'propertyTypeCategory', 'berCategory', 'sizeCategory',
+    'size', 'nearby_properties_count_within_1km', 'nearby_properties_count_within_3km',
     'nearby_properties_count_within_5km',
-    'avg_sold_price_within_5km', 'median_sold_price_within_5km',
-    'avg_asking_price_within_5km', 'median_asking_price_within_5km',
-    'avg_price_delta_within_5km', 'median_price_delta_within_5km',
-    'avg_price_per_sqm_within_5km', 'median_price_per_sqm_within_5km',
-    'avg_bedrooms_within_5km', 'avg_bathrooms_within_5km',
-    'property_type', 'energy_rating'
+    '30d_1km_num_properties_sold', '90d_1km_median_sold_price', '90d_1km_avg_asking_price',
+    '90d_1km_num_properties_sold', '90d_1km_avg_days_on_market', '90d_1km_median_price_per_sqm',
+    '180d_1km_median_sold_price', '180d_1km_avg_asking_price', '180d_1km_num_properties_sold',
+    '180d_1km_avg_days_on_market', '180d_1km_median_price_per_sqm',
+    '1km_ber_dist_C', '1km_ber_dist_D', '1km_ber_dist_B', '1km_ber_dist_F', '1km_ber_dist_A',
+    '1km_property_type_dist_Apartment', '1km_property_type_dist_Semi-D', '1km_property_type_dist_Terrace',
+    '1km_avg_property_size', '1km_median_beds', '1km_median_baths', '1km_price_to_income_ratio',
+    '1km_price_growth_rate',
+    '30d_3km_num_properties_sold', '90d_3km_median_sold_price', '90d_3km_avg_asking_price',
+    '90d_3km_num_properties_sold', '90d_3km_avg_days_on_market', '90d_3km_median_price_per_sqm',
+    '180d_3km_median_sold_price', '180d_3km_avg_asking_price', '180d_3km_num_properties_sold',
+    '180d_3km_avg_days_on_market', '180d_3km_median_price_per_sqm',
+    '3km_ber_dist_C', '3km_ber_dist_D', '3km_ber_dist_B', '3km_ber_dist_E', '3km_ber_dist_A',
+    '3km_ber_dist_F', '3km_ber_dist_Unknown',
+    '3km_property_type_dist_Semi-D', '3km_property_type_dist_Apartment', '3km_property_type_dist_Terrace',
+    '3km_property_type_dist_Detached', '3km_property_type_dist_End of Terrace', '3km_property_type_dist_Bungalow',
+    '3km_property_type_dist_Duplex',
+    '3km_avg_property_size', '3km_median_beds', '3km_median_baths', '3km_price_to_income_ratio',
+    '3km_price_growth_rate',
+    '30d_5km_num_properties_sold', '90d_5km_median_sold_price', '90d_5km_avg_asking_price',
+    '90d_5km_num_properties_sold', '90d_5km_avg_days_on_market', '90d_5km_median_price_per_sqm',
+    '180d_5km_median_sold_price', '180d_5km_avg_asking_price', '180d_5km_num_properties_sold',
+    '180d_5km_avg_days_on_market', '180d_5km_median_price_per_sqm',
+    '5km_ber_dist_C', '5km_ber_dist_D', '5km_ber_dist_B', '5km_ber_dist_A', '5km_ber_dist_E',
+    '5km_ber_dist_Unknown', '5km_ber_dist_F', '5km_ber_dist_G',
+    '5km_property_type_dist_Semi-D', '5km_property_type_dist_Apartment', '5km_property_type_dist_Terrace',
+    '5km_property_type_dist_Detached', '5km_property_type_dist_End of Terrace', '5km_property_type_dist_Duplex',
+    '5km_property_type_dist_Bungalow', '5km_property_type_dist_Townhouse', '5km_property_type_dist_Site',
+    '5km_avg_property_size', '5km_median_beds', '5km_median_baths', '5km_price_to_income_ratio',
+    '5km_price_growth_rate',
+    '1km_ber_dist_E', '1km_ber_dist_G', '1km_ber_dist_Unknown',
+    '1km_property_type_dist_End of Terrace', '3km_ber_dist_G',
+    '1km_property_type_dist_Duplex', '1km_property_type_dist_Studio', '1km_property_type_dist_Townhouse',
+    '1km_property_type_dist_Bungalow', '1km_property_type_dist_Detached',
+    '3km_property_type_dist_Townhouse', '3km_property_type_dist_Studio', '3km_property_type_dist_Site',
+    '5km_property_type_dist_Studio', '5km_property_type_dist_Houses', '3km_property_type_dist_Houses',
+    '1km_property_type_dist_Site', '1km_property_type_dist_Houses'
+]
+
+# Add these new features to your features list
+features += [
+    'days_on_market',
+    'price_change_percentage',
+    'price_per_bedroom',
+    'price_per_bathroom',
+    'total_room_count',
+    'bedroom_to_bathroom_ratio',
+    'property_age',
+    'distance_to_city_center',
+    'season_of_sale'
 ]
 
 # Ensure all required features are present
@@ -177,33 +218,70 @@ preprocessor = ColumnTransformer(
 # =========================================
 model_pipeline = Pipeline(steps=[
     ('preprocessor', preprocessor),
-    ('regressor', XGBRegressor(
-        n_estimators=100,
-        learning_rate=0.1,
-        max_depth=6,
-        random_state=42,
-        n_jobs=-1,
-        objective='reg:squarederror'  # Specify the objective for regression
-    ))
+    ('regressor', XGBRegressor(random_state=42, n_jobs=-1))
 ])
 
 # =========================================
-# 10. Train the Model
+# 10. Hyperparameter Tuning
 # =========================================
-try:
-    model_pipeline.fit(X_train, y_train)
-    print("\nModel training completed.")
-except ValueError as e:
-    print("\nError during model training:", e)
-    raise
+# Define the parameter space
+param_distributions = {
+    'regressor__n_estimators': randint(100, 1000),
+    'regressor__max_depth': randint(3, 10),
+    'regressor__learning_rate': uniform(0.01, 0.3),
+    'regressor__subsample': uniform(0.6, 0.4),
+    'regressor__colsample_bytree': uniform(0.6, 0.4),
+    'regressor__min_child_weight': randint(1, 10),
+    'regressor__gamma': uniform(0, 5)
+}
+
+# Create the RandomizedSearchCV object
+random_search = RandomizedSearchCV(
+    model_pipeline,
+    param_distributions=param_distributions,
+    n_iter=100,
+    cv=5,
+    scoring='neg_mean_squared_error',
+    n_jobs=-1,
+    random_state=42,
+    verbose=2
+)
+
+# Fit the random search
+print("Starting hyperparameter tuning...")
+random_search.fit(X_train, y_train)
+
+# Print the best parameters and score
+print("Best parameters:", random_search.best_params_)
+print("Best cross-validation score: {:.2f}".format(-random_search.best_score_))
+
+# Update the model pipeline with the best parameters
+model_pipeline = random_search.best_estimator_
 
 # =========================================
-# 11. Make Predictions on the Test Set
+# 11. Cross-Validation
+# =========================================
+print("Performing cross-validation...")
+cv_scores = cross_val_score(model_pipeline, X_train, y_train, cv=5, scoring='neg_mean_squared_error')
+cv_rmse_scores = np.sqrt(-cv_scores)
+
+print("Cross-validation RMSE scores:", cv_rmse_scores)
+print("Mean RMSE: {:.2f}".format(cv_rmse_scores.mean()))
+print("Standard deviation of RMSE: {:.2f}".format(cv_rmse_scores.std()))
+
+# =========================================
+# 12. Train the Final Model
+# =========================================
+print("Training the final model...")
+model_pipeline.fit(X_train, y_train)
+
+# =========================================
+# 13. Make Predictions on the Test Set
 # =========================================
 y_pred = model_pipeline.predict(X_test)
 
 # =========================================
-# 12. Evaluate the Model
+# 14. Evaluate the Model
 # =========================================
 rmse = np.sqrt(mean_squared_error(y_test, y_pred))
 r2 = r2_score(y_test, y_pred)
@@ -213,7 +291,7 @@ print(f"Root Mean Squared Error (RMSE): {rmse:,.2f}")
 print(f"R² Score: {r2:.4f}")
 
 # =========================================
-# 13. Feature Importance Analysis
+# 15. Feature Importance Analysis
 # =========================================
 def get_feature_names(column_transformer):
     feature_names = []
@@ -257,7 +335,7 @@ print(f"\nTop {top_n} Feature Importances:")
 print(top_features)
 
 # =========================================
-# 14. Visualize Feature Importances
+# 16. Visualize Feature Importances
 # =========================================
 plt.figure(figsize=(10, 8))
 sns.barplot(x='Importance', y='Feature', data=top_features, palette='viridis')
@@ -268,7 +346,7 @@ plt.tight_layout()
 plt.show()
 
 # =========================================
-# 15. Save the Trained Model
+# 17. Save the Trained Model
 # =========================================
 
 # Define the path to save the model
@@ -279,7 +357,7 @@ joblib.dump(model_pipeline, model_path)
 print(f"\nSaved trained model to {model_path}")
 
 # =========================================
-# 16. Define the `predict_and_compare` Function
+# 18. Define the `predict_and_compare` Function
 # =========================================
 
 def predict_and_compare(sample_index=None, unique_id=None):
@@ -361,14 +439,14 @@ def predict_and_compare(sample_index=None, unique_id=None):
         print("Percentage Error: Undefined (Actual Sold Price is 0)")
 
 # =========================================
-# 17. Example Usage of `predict_and_compare`
+# 19. Example Usage of `predict_and_compare`
 # =========================================
 
 # Example: Predict and compare for the first sample in the test set
 predict_and_compare(sample_index=0)
 
 # =========================================
-# 18. Save the Final Test Dataset with Predictions as CSV
+# 20. Save the Final Test Dataset with Predictions as CSV
 # =========================================
 
 # Create a DataFrame for test set predictions
@@ -397,7 +475,7 @@ test_predictions.to_csv(output_path, index=False)
 print(f"\nSaved final test predictions to {output_path}")
 
 # =========================================
-# 19. Simple Validation (Optional)
+# 21. Simple Validation (Optional)
 # =========================================
 
 # Further split the training data into training and validation sets
@@ -419,7 +497,7 @@ print(f"Root Mean Squared Error (RMSE): {val_rmse:,.2f}")
 print(f"R² Score: {val_r2:.4f}")
 
 # =========================================
-# 20. Optional: Learning Curves
+# 22. Optional: Learning Curves
 # =========================================
 # Uncomment the following section if you wish to plot learning curves
 
@@ -446,3 +524,11 @@ plt.show()
 # =========================================
 # End of Script
 # =========================================
+
+# Add these constants at the top of your script
+DUBLIN_CENTER_LAT = 53.3498  # Latitude of Dublin city center
+DUBLIN_CENTER_LON = -6.2603  # Longitude of Dublin city center
+
+
+
+
